@@ -173,14 +173,9 @@ void app::loop(void) {
         mMqtt.loop();
     #endif
 
-    // Plugin ZeroExport
-    #if defined(PLUGIN_ZEROEXPORT)
-    if(mConfig->nrf.enabled || mConfig->cmt.enabled) {
-        mZeroExport.loop();
-    }
+    #if defined(PLUGIN_DISPLAY)
+    mDisplay.loop();
     #endif
-    // Plugin ZeroExport - Ende
-
     yield();
 }
 
