@@ -15,7 +15,8 @@
 
 class AhoyEthernet : public AhoyNetwork {
     public:
-        void begin() override {
+        virtual void begin() override {
+            mMode = Mode::WIRELESS;
             mAp.enable();
 
             if(!mConfig->sys.eth.enabled)
@@ -25,9 +26,32 @@ class AhoyEthernet : public AhoyNetwork {
             ETH.setHostname(mConfig->sys.deviceName);
         }
 
-        void OnEvent(WiFiEvent_t event) override {
+        virtual String getIp(void) override {
+            if(Mode::WIRELESS == mMode)
+                return AhoyWifi::getIp();
+            else
+                return ETH.localIP().toString();
+        }
+
+        virtual String getMac(void) override {
+            if(Mode::WIRELESS == mMode)
+                return AhoyWifi::getMac();
+            else
+                return mEthSpi.macAddress();
+        }
+
+        virtual bool isWiredConnection() override {
+            return (Mode::WIRED == mMode);
+        }
+
+    private:
+        virtual void OnEvent(WiFiEvent_t event) override {
             switch(event) {
                 case ARDUINO_EVENT_ETH_CONNECTED:
+                    mMode = Mode::WIRED; // needed for static IP
+                    [[fallthrough]];
+                case SYSTEM_EVENT_STA_CONNECTED:
+                    mWifiConnecting = false;
                     if(NetworkState::CONNECTED != mStatus) {
                         mStatus = NetworkState::CONNECTED;
                         DPRINTLN(DBG_INFO, F("Network connected"));

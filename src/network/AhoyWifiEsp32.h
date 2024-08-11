@@ -35,7 +35,21 @@ class AhoyWifi : public AhoyNetwork {
             #endif
         }
 
-        void OnEvent(WiFiEvent_t event) override {
+        void tickNetworkLoop() override {
+            if(mAp.isEnabled())
+                mAp.tickLoop();
+        }
+
+        virtual String getIp(void) override {
+            return WiFi.localIP().toString();
+        }
+
+        virtual String getMac(void) override {
+            return WiFi.macAddress();
+        }
+
+    private:
+        virtual void OnEvent(WiFiEvent_t event) override {
             switch(event) {
                 case SYSTEM_EVENT_STA_CONNECTED:
                     if(NetworkState::CONNECTED != mStatus) {
