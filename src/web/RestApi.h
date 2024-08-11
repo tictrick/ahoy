@@ -836,6 +836,103 @@ class RestApi {
         }
         #endif
 
+        void getNetworkInfo(JsonObject obj) {
+            #if defined(ETHERNET)
+            bool isWired = mApp->isWiredConnection();
+            if(!isWired)
+                obj[F("wifi_channel")] = WiFi.channel();
+
+            obj[F("wired")] = isWired;
+            #else
+                obj[F("wifi_channel")] = WiFi.channel();
+            #endif
+
+            obj[F("ap_pwd")] = mConfig->sys.apPwd;
+            obj[F("ssid")]   = mConfig->sys.stationSsid;
+            obj[F("hidd")]   = mConfig->sys.isHidden;
+            obj[F("mac")]    = mApp->getMac();
+            obj[F("ip")]     = mApp->getIp();
+        }
+
+        void getChipInfo(JsonObject obj) {
+            obj[F("cpu_freq")]     = ESP.getCpuFreqMHz();
+            obj[F("sdk")]          = ESP.getSdkVersion();
+            #if defined(ESP32)
+                obj[F("revision")] = ESP.getChipRevision();
+                obj[F("model")]    = ESP.getChipModel();
+                obj[F("cores")]    = ESP.getChipCores();
+
+                switch (esp_reset_reason()) {
+                    default:
+                        [[fallthrough]];
+                    case ESP_RST_UNKNOWN:
+                        obj[F("reboot_reason")] = F("Unknown");
+                        break;
+                    case ESP_RST_POWERON:
+                        obj[F("reboot_reason")] = F("Power on");
+                        break;
+                    case ESP_RST_EXT:
+                        obj[F("reboot_reason")] = F("External");
+                        break;
+                    case ESP_RST_SW:
+                        obj[F("reboot_reason")] = F("Software");
+                        break;
+                    case ESP_RST_PANIC:
+                        obj[F("reboot_reason")] = F("Panic");
+                        break;
+                    case ESP_RST_INT_WDT:
+                        obj[F("reboot_reason")] = F("Interrupt Watchdog");
+                        break;
+                    case ESP_RST_TASK_WDT:
+                        obj[F("reboot_reason")] = F("Task Watchdog");
+                        break;
+                    case ESP_RST_WDT:
+                        obj[F("reboot_reason")] = F("Watchdog");
+                        break;
+                    case ESP_RST_DEEPSLEEP:
+                        obj[F("reboot_reason")] = F("Deepsleep");
+                        break;
+                    case ESP_RST_BROWNOUT:
+                        obj[F("reboot_reason")] = F("Brownout");
+                        break;
+                    case ESP_RST_SDIO:
+                        obj[F("reboot_reason")] = F("SDIO");
+                        break;
+                }
+            #else
+                obj[F("core_version")]  = ESP.getCoreVersion();
+                obj[F("reboot_reason")] = ESP.getResetReason();
+            #endif
+        }
+
+        void getMemoryInfo(JsonObject obj) {
+            obj[F("heap_frag")]         = mHeapFrag;
+            obj[F("heap_max_free_blk")] = mHeapFreeBlk;
+            obj[F("heap_free")]         = mHeapFree;
+
+            obj[F("par_size_app0")] = ESP.getFreeSketchSpace();
+            obj[F("par_used_app0")] = ESP.getSketchSize();
+
+            #if defined(ESP32)
+                obj[F("heap_total")] = ESP.getHeapSize();
+
+                const esp_partition_t *partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_COREDUMP, "coredump");
+                if (partition != NULL)
+                    obj[F("flash_size")] = partition->address + partition->size;
+
+                obj[F("par_size_spiffs")] = LittleFS.totalBytes();
+                obj[F("par_used_spiffs")] = LittleFS.usedBytes();
+            #else
+                obj[F("flash_size")] = ESP.getFlashChipRealSize();
+
+                FSInfo info;
+                LittleFS.info(info);
+                obj[F("par_used_spiffs")] = info.usedBytes;
+                obj[F("par_size_spiffs")] = info.totalBytes;
+                obj[F("heap_total")] = 24*1014; // FIXME: don't know correct value
+            #endif
+        }
+
         void getRadioNrf(JsonObject obj) {
             obj[F("en")] = (bool) mConfig->nrf.enabled;
             if(mConfig->nrf.enabled) {
