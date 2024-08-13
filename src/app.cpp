@@ -142,9 +142,7 @@ void app::setup() {
 
     mPubSerial.setup(mConfig, &mSys, &mTimestamp);
 
-    #if !defined(ETHERNET)
     //mImprov.setup(this, mConfig->sys.deviceName, mVersion);
-    #endif
 
     #if defined(ENABLE_SIMULATOR)
     mSimulator.setup(&mSys, &mTimestamp, 0);
@@ -171,6 +169,10 @@ void app::loop(void) {
     #if defined(ENABLE_MQTT)
     if (mMqttEnabled && mNetworkConnected)
         mMqtt.loop();
+    #endif
+
+    #if defined(PLUGIN_DISPLAY)
+    mDisplay.loop();
     #endif
 
     // Plugin ZeroExport
@@ -220,9 +222,7 @@ void app::regularTickers(void) {
     // Plugin ZeroExport - Ende
 
     every(std::bind(&PubSerialType::tick, &mPubSerial), 5, "uart");
-    #if !defined(ETHERNET)
     //everySec([this]() { mImprov.tickSerial(); }, "impro");
-    #endif
 
     #if defined(ENABLE_HISTORY)
     everySec(std::bind(&HistoryType::tickerSecond, &mHistory), "hist");
@@ -436,7 +436,7 @@ void app::tickSend(void) {
             notAvail = false;
             // Plugin ZeroExport
 //            #if defined(PLUGIN_ZEROEXPORT)
-// TODO: aufrï¿½umen
+// TODO: aufr?umen
 //            if(mConfig->nrf.enabled || mConfig->cmt.enabled) {
 //                mZeroExport.loop();
 //                zeroexport();
@@ -619,12 +619,12 @@ void app::mqttSubRxCb(const char* topic, const uint8_t* payload, size_t len, siz
     }
 
     #if defined(PLUGIN_ZEROEXPORT)
-        // FremdTopic ist fÃ¼r ZeroExport->Powermeter
-        // AhoyTopic ist fÃ¼r ZeroExport
+        // FremdTopic ist für ZeroExport->Powermeter
+        // AhoyTopic ist für ZeroExport
         if (mZeroExport.onMqttMessage(topic, payload, len)) return;
     #endif
 
-    // AhoyTopic ist fÃ¼r Ahoy
+    // AhoyTopic ist für Ahoy
     int baseTopicLen = strlen(mConfig->mqtt.topic) + strlen("/ctrl") + 1;
     char baseTopic[baseTopicLen];
 

@@ -39,9 +39,7 @@ jobs:
           #- esp32-s2-mini
           #- esp32-c3-mini
           - opendtufusion-zero_export
-          - opendtufusion-ethernet-zero_export
           - opendtufusion-16MB-zero_export
-          - opendtufusion-ethernet-16MB-zero_export
 
     steps:
     - uses: actions/checkout@v4
@@ -113,9 +111,7 @@ jobs:
           #- esp32-s2-mini-de
           #- esp32-c3-mini-de
           - opendtufusion-zero_export-de
-          - opendtufusion-ethernet-zero_export-de
           - opendtufusion-16MB-zero_export-de
-          - opendtufusion-ethernet-16MB-zero_export-de  
 
     steps:
     - uses: actions/checkout@v4
