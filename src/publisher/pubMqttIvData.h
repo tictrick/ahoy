@@ -231,7 +231,6 @@ class PubMqttIvData {
                                 publish = true;
 
                             if (publish) {
-                                doc[F("ts")] = rec->ts;
                                 // if next channel or end->publish
                                 serializeJson(doc, mVal.data(), mVal.size());
                                 snprintf(mSubTopic.data(), mSubTopic.size(), "%s/ch%d", mIv->config->name, rec->assign[mPos].ch);

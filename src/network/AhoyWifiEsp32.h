@@ -6,7 +6,7 @@
 #ifndef __AHOY_WIFI_ESP32_H__
 #define __AHOY_WIFI_ESP32_H__
 
-#if defined(ESP32)
+#if defined(ESP32) && !defined(ETHERNET)
 #include <functional>
 #include <AsyncUDP.h>
 #include "AhoyNetwork.h"
@@ -14,12 +14,11 @@
 
 class AhoyWifi : public AhoyNetwork {
     public:
-        virtual void begin() override {
+        void begin() override {
             mAp.enable();
 
             if(strlen(mConfig->sys.stationSsid) == 0)
                 return; // no station wifi defined
-
 
             WiFi.disconnect(); // clean up
             WiFi.setHostname(mConfig->sys.deviceName);
@@ -36,21 +35,7 @@ class AhoyWifi : public AhoyNetwork {
             #endif
         }
 
-        void tickNetworkLoop() override {
-            if(mAp.isEnabled())
-                mAp.tickLoop();
-        }
-
-        virtual String getIp(void) override {
-            return WiFi.localIP().toString();
-        }
-
-        virtual String getMac(void) override {
-            return WiFi.macAddress();
-        }
-
-    private:
-        virtual void OnEvent(WiFiEvent_t event) override {
+        void OnEvent(WiFiEvent_t event) override {
             switch(event) {
                 case SYSTEM_EVENT_STA_CONNECTED:
                     if(NetworkState::CONNECTED != mStatus) {
@@ -92,12 +77,22 @@ class AhoyWifi : public AhoyNetwork {
             }
         }
 
-        virtual void setStaticIp() override {
+        void tickNetworkLoop() override {
+            if(mAp.isEnabled())
+                mAp.tickLoop();
+        }
+
+        String getIp(void) override {
+            return WiFi.localIP().toString();
+        }
+
+    private:
+        void setStaticIp() override {
             setupIp([this](IPAddress ip, IPAddress gateway, IPAddress mask, IPAddress dns1, IPAddress dns2) -> bool {
                 return WiFi.config(ip, gateway, mask, dns1, dns2);
             });
         }
 };
 
-#endif /*ESP32*/
+#endif /*ESP32 & !ETHERNET*/
 #endif /*__AHOY_WIFI_ESP32_H__*/

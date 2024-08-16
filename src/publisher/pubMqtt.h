@@ -117,7 +117,7 @@ class PubMqtt {
 
             while (!queue.empty())
             {
-#warning "TODO: sTopic und sPayload hier fällen und dann übergeben?";
+#warning "TODO: sTopic und sPayload hier fÃ¤llen und dann Ã¼bergeben?";
 #warning "Ist es wirklich so, dass die Payload eines Topics aus mehreren Nachrichten bestehen kann und erst zusammengesetzt werden muss? Was ist dann mit der Reihenfolge?";
                 message_s *entry = &queue.front();
                 if(NULL != mSubscriptionCb)
@@ -309,10 +309,7 @@ class PubMqtt {
             tickerMinute();
             publish(mLwtTopic.data(), mqttStr[MQTT_STR_LWT_CONN], true, false);
 
-            snprintf(mVal.data(), mVal.size(), "ctrl/restart_ahoy");
-            subscribe(mVal.data());
-
-            for(uint8_t i = 0; i < MAX_NUM_INVERTERS; i++) {
+           for(uint8_t i = 0; i < MAX_NUM_INVERTERS; i++) {
                 snprintf(mVal.data(), mVal.size(), "ctrl/limit/%d", i);
                 subscribe(mVal.data(), QOS_2);
                 snprintf(mVal.data(), mVal.size(), "ctrl/restart/%d", i);
@@ -357,7 +354,7 @@ class PubMqtt {
 
         void onMessage(const espMqttClientTypes::MessageProperties& properties, const char* topic, const uint8_t* payload, size_t len, size_t index, size_t total)
         {
-#warning "TODO: if aktivieren nach Logprüfung. Was bedeutet index und total?";
+#warning "TODO: if aktivieren nach LogprÃ¼fung. Was bedeutet index und total?";
 //            if (total != 1) {
 //                DPRINTLN(DBG_ERROR, String("pubMqtt.h: onMessage ERROR: index=") + String(index) + String(" total=") + String(total));
 //                return;

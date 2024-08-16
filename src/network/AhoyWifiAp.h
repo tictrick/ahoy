@@ -36,7 +36,11 @@ class AhoyWifiAp {
 
             ah::welcome(mIp.toString(), String(F("Password: ") + String(mCfg->apPwd)));
 
+            #if defined(ETHERNET)
+            WiFi.mode(WIFI_AP);
+            #else
             WiFi.mode(WIFI_AP_STA);
+            #endif
             WiFi.softAPConfig(mIp, mIp, IPAddress(255, 255, 255, 0));
             WiFi.softAP(WIFI_AP_SSID, mCfg->apPwd);
 
@@ -56,7 +60,12 @@ class AhoyWifiAp {
 
             mDns.stop();
             WiFi.softAPdisconnect();
+            #if defined(ETHERNET)
+            WiFi.mode(WIFI_OFF);
+            #else
+            WiFi.scanDelete();
             WiFi.mode(WIFI_STA);
+            #endif
 
             mEnabled = false;
         }

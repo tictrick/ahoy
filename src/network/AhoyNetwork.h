@@ -79,13 +79,8 @@ class AhoyNetwork {
         virtual void begin() = 0;
         virtual void tickNetworkLoop() = 0;
         virtual String getIp(void) = 0;
-        virtual String getMac(void) = 0;
 
         virtual bool getWasInCh12to14() {
-            return false;
-        }
-
-        virtual bool isWiredConnection() {
             return false;
         }
 
@@ -93,6 +88,7 @@ class AhoyNetwork {
             return mAp.isEnabled();
         }
 
+        #if !defined(ETHERNET)
         bool getAvailNetworks(JsonObject obj, IApp *app) {
             if(!mScanActive) {
                 app->addOnce([this]() {scan();}, 1, "scan");
@@ -126,6 +122,7 @@ class AhoyNetwork {
             }
             WiFi.scanNetworks(true, true);
         }
+        #endif
 
     protected:
         virtual void setStaticIp() = 0;
@@ -176,6 +173,7 @@ class AhoyNetwork {
             }
         }
 
+        #if !defined(ETHERNET)
         void sortRSSI(int *sort, int n) {
             for (int i = 0; i < n; i++)
                 sort[i] = i;
@@ -184,6 +182,7 @@ class AhoyNetwork {
                     if (WiFi.RSSI(sort[j]) > WiFi.RSSI(sort[i]))
                         std::swap(sort[i], sort[j]);
         }
+        #endif
 
     private:
         void sendNTPpacket(void) {
@@ -235,7 +234,9 @@ class AhoyNetwork {
         uint32_t *mUtcTimestamp = nullptr;
         bool mConnected = false;
         bool mScanActive = false;
+        #if !defined(ETHERNET)
         bool mWifiConnecting = false;
+        #endif
 
         OnNetworkCB mOnNetworkCB;
         OnTimeCB mOnTimeCB;
