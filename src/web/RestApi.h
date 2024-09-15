@@ -1070,6 +1070,12 @@ class RestApi {
             getSerial(obj.createNestedObject(F("serial")));
             getStaticIp(obj.createNestedObject(F("static_ip")));
             getDisplay(obj.createNestedObject(F("display")));
+
+            // Plugin ZeroExport
+            #if defined(PLUGIN_ZEROEXPORT)
+            getZeroExport(obj.createNestedObject(F("zeroExport")));
+            #endif
+            // Plugin ZeroExport - Ende
         }
 
         void getNetworks(JsonObject obj) {
