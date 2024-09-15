@@ -1317,6 +1317,11 @@
                     "token": "COMMUNICATING",
                     "en": "communicating",
                     "de": "kommunizierend"
+                },
+                {
+                    "token": "SUN",
+                    "en": "Sun",
+                    "de": "Sonne"
                 }
             ]
         },
@@ -1505,18 +1510,13 @@
                 },
                 {
                     "token": "PRODUCING",
-                    "en": "producing",
+                    "en": "is producing",
                     "de": "produziert"
                 },
                 {
                     "token": "INVERTER",
                     "en": "Inverter",
                     "de": "Wechselrichter"
-                },
-                {
-                    "token": "IS",
-                    "en": "is",
-                    "de": "ist"
                 },
                 {
                     "token": "LAST_SUCCESS",

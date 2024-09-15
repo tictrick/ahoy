@@ -202,6 +202,10 @@ class app : public IApp, public ah::Scheduler {
             return mNetwork->isApActive();
         }
 
+        bool isNetworkConnected() override {
+            return mNetwork->isConnected();
+        }
+
         void setRebootFlag() override {
             once(std::bind(&app::tickReboot, this), 3, "rboot");
         }

@@ -676,15 +676,15 @@ class RestApi {
             // find oldest alarm
             uint8_t offset = 0;
             uint32_t oldestStart = 0xffffffff;
-            for(uint8_t i = 0; i < 10; i++) {
+            for(uint8_t i = 0; i < Inverter<>::MaxAlarmNum; i++) {
                 if((iv->lastAlarm[i].start != 0) && (iv->lastAlarm[i].start < oldestStart)) {
                     offset = i;
                     oldestStart = iv->lastAlarm[i].start;
                 }
             }
 
-            for(uint8_t i = 0; i < 10; i++) {
-                uint8_t pos = (i + offset) % 10;
+            for(uint8_t i = 0; i < Inverter<>::MaxAlarmNum; i++) {
+                uint8_t pos = (i + offset) % Inverter<>::MaxAlarmNum;
                 alarm[pos][F("code")]  = iv->lastAlarm[pos].code;
                 alarm[pos][F("str")]   = iv->getAlarmStr(iv->lastAlarm[pos].code);
                 alarm[pos][F("start")] = iv->lastAlarm[pos].start;
@@ -824,7 +824,9 @@ class RestApi {
         void getChipInfo(JsonObject obj) {
             obj[F("cpu_freq")]     = ESP.getCpuFreqMHz();
             obj[F("sdk")]          = ESP.getSdkVersion();
+
             #if defined(ESP32)
+                obj[F("temp_sensor_c")] = ah::readTemperature();
                 obj[F("revision")] = ESP.getChipRevision();
                 obj[F("model")]    = ESP.getChipModel();
                 obj[F("cores")]    = ESP.getChipCores();
@@ -927,7 +929,6 @@ class RestApi {
             ah::ip2Char(mConfig->sys.ip.gateway, buf); obj[F("gateway")] = String(buf);
         }
 
-        #if defined(PLUGIN_DISPLAY)
         void getDisplay(JsonObject obj) {
             obj[F("disp_typ")]          = (uint8_t)mConfig->plugin.display.type;
             obj[F("disp_pwr")]          = (bool)mConfig->plugin.display.pwrSaveAtIvOffline;
@@ -944,7 +945,6 @@ class RestApi {
             obj[F("disp_bsy")]          = mConfig->plugin.display.disp_busy;
             obj[F("pir_pin")]           = mConfig->plugin.display.pirPin;
         }
-        #endif
 
         // Plugin ZeroExport
         #if defined(PLUGIN_ZEROEXPORT)
@@ -1069,14 +1069,7 @@ class RestApi {
             getRadioNrf(obj.createNestedObject(F("radioNrf")));
             getSerial(obj.createNestedObject(F("serial")));
             getStaticIp(obj.createNestedObject(F("static_ip")));
-            #if defined(PLUGIN_DISPLAY)
             getDisplay(obj.createNestedObject(F("display")));
-            #endif
-            // Plugin ZeroExport
-            #if defined(PLUGIN_ZEROEXPORT)
-            getZeroExport(obj.createNestedObject(F("zeroExport")));
-            #endif
-            // Plugin ZeroExport - Ende
         }
 
         void getNetworks(JsonObject obj) {

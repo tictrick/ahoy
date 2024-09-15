@@ -166,7 +166,10 @@ class PubMqtt {
             publish(subtopics[MQTT_UPTIME], mVal.data());
             publish(subtopics[MQTT_RSSI], String(WiFi.RSSI()).c_str());
             publish(subtopics[MQTT_FREE_HEAP], String(ESP.getFreeHeap()).c_str());
-            #ifndef ESP32
+            #if defined(ESP32)
+            snprintf(mVal.data(), mVal.size(), "%.2f", ah::readTemperature());
+            publish(subtopics[MQTT_TEMP_SENS_C], mVal.data());
+            #else
             publish(subtopics[MQTT_HEAP_FRAG], String(ESP.getHeapFragmentation()).c_str());
             #endif
         }
@@ -308,6 +311,9 @@ class PubMqtt {
             publish(subtopics[MQTT_IP_ADDR], mApp->getIp().c_str(), true);
             tickerMinute();
             publish(mLwtTopic.data(), mqttStr[MQTT_STR_LWT_CONN], true, false);
+
+            snprintf(mVal.data(), mVal.size(), "ctrl/restart_ahoy");
+            subscribe(mVal.data());
 
             snprintf(mVal.data(), mVal.size(), "ctrl/restart_ahoy");
             subscribe(mVal.data());
