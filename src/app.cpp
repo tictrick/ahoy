@@ -532,7 +532,9 @@ void app:: zeroIvValues(bool checkAvail, bool skipYieldDay) {
 //-----------------------------------------------------------------------------
 void app::resetSystem(void) {
     #if defined(PLUGIN_ZEROEXPORT)
-    snprintf(mVersion, sizeof(mVersion), "%d.%d.%d-zero", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#warning "VERSION_ZEROEXPORT"
+//    snprintf(mVersion, sizeof(mVersion), "%d.%d.%d-zero", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    snprintf(mVersion, sizeof(mVersion), "%d.%d.%d-%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_ZEROEXPORT);
     #else
     snprintf(mVersion, sizeof(mVersion), "%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
     #endif
