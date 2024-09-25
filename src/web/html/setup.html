@@ -1483,9 +1483,13 @@
                         divRow("{#ZE_GROUP_TAB_ADVANCED_POWERTOLERANCE}", ml("input", {name: "powerTolerance", class: "text", type: "number", min: "0", max: "255", value: obj.powerTolerance}, null)),
                         divRow("{#ZE_GROUP_TAB_ADVANCED_POWERMAX}", ml("input", {name: "powerMax", class: "text", type: "number", min: "0", max: "65535", value: obj.powerMax}, null)),
                         divRow("{#ZE_GROUP_TAB_ADVANCED_KP}", ml("input", {name: "Kp", class: "text", type: "number", min: "0", max: "100", step: "1", value: obj.Kp}, null)),
-                        divRow("{#ZE_GROUP_TAB_ADVANCED_KI}", ml("input", {name: "Ki", class: "text", type: "number", min: "0", max: "100", step: "1", value: obj.Ki}, null)),
-                        divRow("{#ZE_GROUP_TAB_ADVANCED_KD}", ml("input", {name: "Kd", class: "text", type: "number", min: "0", max: "100", step: "1", value: obj.Kd}, null)),
-                    ]),
+// TODO: Ki, Kd temporarily removed
+//                        divRow("{#ZE_GROUP_TAB_ADVANCED_KI}", ml("input", {name: "Ki", class: "text", type: "number", min: "0", max: "100", step: "1", value: obj.Ki}, null)),
+                        ml("input", {name: "Ki", class: "text", type: "hidden", min: "0", max: "100", step: "1", value: obj.Ki}, null),
+//                        divRow("{#ZE_GROUP_TAB_ADVANCED_KD}", ml("input", {name: "Kd", class: "text", type: "number", min: "0", max: "100", step: "1", value: obj.Kd}, null)),
+                        ml("input", {name: "Kd", class: "text", type: "hidden", min: "0", max: "100", step: "1", value: obj.Kd}, null),
+// End TODO: Ki, Kd temporarily removed
+]),
                     // Global
                     ml("div", {class: "row mt-5"}, [
                         ml("div", {class: "col-8", id: "res"}, ""),
