@@ -126,9 +126,7 @@ class powermeter {
                 mCfg->groups[group].power = power;
 
                 // MQTT - Powermeter
-                if (mMqtt->isConnected()) {
-                    mMqtt->publish(String("zero/state/groups/" + String(group) + "/powermeter/P").c_str(), String(ah::round1(power)).c_str(), false);
-                }
+                mMqtt->publish(String("zero/state/groups/" + String(group) + "/powermeter/P").c_str(), String(ah::round1(power)).c_str(), false);
             }
         }
     }
