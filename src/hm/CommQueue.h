@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// 2023 Ahoy, https://github.com/lumpapu/ahoy
+// 2024 Ahoy, https://github.com/lumpapu/ahoy
 // Creative Commons - http://creativecommons.org/licenses/by-nc-sa/4.0/deed
 //-----------------------------------------------------------------------------
 
@@ -11,36 +11,114 @@
 #include "hmInverter.h"
 #include "../utils/dbg.h"
 
-#define DEFAULT_ATTEMPS                 5
-#define MORE_ATTEMPS_ALARMDATA          3 // 8
-#define MORE_ATTEMPS_GRIDONPROFILEPARA  0 // 5
+#if !defined(ESP32)
+    #define vSemaphoreDelete(a)
+    #define xSemaphoreTake(a, b)
+    #define xSemaphoreGive(a)
+#endif
 
 template <uint8_t N=100>
 class CommQueue {
-    public:
-        void addImportant(Inverter<> *iv, uint8_t cmd) {
-            queue_s q(iv, cmd, true);
-            if(!isIncluded(&q)) {
-                dec(&mRdPtr);
-                mQueue[mRdPtr] = q;
+    protected: /* types */
+        static constexpr uint8_t DefaultAttempts = 5;
+        static constexpr uint8_t MoreAttemptsAlarmData = 3;
+        static constexpr uint8_t MoreAttemptsGridProfile = 0;
+
+    protected:
+        struct QueueElement {
+            Inverter<> *iv;
+            uint8_t cmd;
+            uint8_t attempts;
+            uint8_t attemptsMax;
+            uint32_t ts;
+            bool isDevControl;
+
+            QueueElement()
+                : iv {nullptr}
+                , cmd {0}
+                , attempts {0}
+                , attemptsMax {0}
+                , ts {0}
+                , isDevControl {false}
+            {}
+
+            QueueElement(Inverter<> *iv, uint8_t cmd, bool devCtrl)
+                : iv {iv}
+                , cmd {cmd}
+                , attempts {DefaultAttempts}
+                , attemptsMax {DefaultAttempts}
+                , ts {0}
+                , isDevControl {devCtrl}
+            {}
+
+            QueueElement(const QueueElement &other) // copy constructor
+                : iv {other.iv}
+                , cmd {other.cmd}
+                , attempts {other.attempts}
+                , attemptsMax {other.attemptsMax}
+                , ts {other.ts}
+                , isDevControl {other.isDevControl}
+            {}
+
+            void changeCmd(uint8_t cmd) {
+                this->cmd = cmd;
+                this->isDevControl = false;
             }
+
+            void setTs(const uint32_t ts) {
+                this->ts = ts;
+            }
+
+            void setAttempt() {
+                if(this->attempts)
+                    this->attempts--;
+            }
+
+            void incrAttempt(uint8_t attempts = 1) {
+                this->attempts += attempts;
+                if (this->attempts > this->attemptsMax)
+                    this->attemptsMax = this->attempts;
+            }
+        };
+
+    public:
+        CommQueue()
+            : wrPtr {0}
+            , rdPtr {0}
+        {
+            #if defined(ESP32)
+            this->mutex = xSemaphoreCreateBinaryStatic(&this->mutex_buffer);
+            xSemaphoreGive(this->mutex);
+            #endif
+        }
+
+        ~CommQueue() {
+            vSemaphoreDelete(this->mutex);
+        }
+
+        void addImportant(Inverter<> *iv, uint8_t cmd) {
+            QueueElement q(iv, cmd, true);
+            xSemaphoreTake(this->mutex, portMAX_DELAY);
+            if(!isIncluded(&q)) {
+                dec(&this->rdPtr);
+                mQueue[this->rdPtr] = q;
+            }
+            xSemaphoreGive(this->mutex);
         }
 
         void add(Inverter<> *iv, uint8_t cmd) {
-            queue_s q(iv, cmd, false);
+            xSemaphoreTake(this->mutex, portMAX_DELAY);
+            QueueElement q(iv, cmd, false);
             if(!isIncluded(&q)) {
-                mQueue[mWrPtr] = q;
-                inc(&mWrPtr);
+                mQueue[this->wrPtr] = q;
+                inc(&this->wrPtr);
             }
-        }
-
-        void chgCmd(Inverter<> *iv, uint8_t cmd) {
-            mQueue[mWrPtr] = queue_s(iv, cmd, false);
+            xSemaphoreGive(this->mutex);
         }
 
         uint8_t getFillState(void) const {
-            //DPRINTLN(DBG_INFO, "wr: " + String(mWrPtr) + ", rd: " + String(mRdPtr));
-            return abs(mRdPtr - mWrPtr);
+            //DPRINTLN(DBG_INFO, "wr: " + String(this->wrPtr) + ", rd: " + String(this->rdPtr));
+            return abs(this->rdPtr - this->wrPtr);
         }
 
         uint8_t getMaxFill(void) const {
@@ -48,70 +126,43 @@ class CommQueue {
         }
 
     protected:
-        struct queue_s {
-            Inverter<> *iv;
-            uint8_t cmd;
-            uint8_t attempts;
-            uint8_t attemptsMax;
-            uint32_t ts;
-            bool isDevControl;
-            queue_s() {}
-            queue_s(Inverter<> *i, uint8_t c, bool dev) :
-                iv(i), cmd(c), attempts(DEFAULT_ATTEMPS), attemptsMax(DEFAULT_ATTEMPS), ts(0), isDevControl(dev) {}
-        };
-
-    protected:
-        void add(queue_s q) {
-            mQueue[mWrPtr] = q;
-            inc(&mWrPtr);
+        void add(QueueElement q) {
+            xSemaphoreTake(this->mutex, portMAX_DELAY);
+            mQueue[this->wrPtr] = q;
+            inc(&this->wrPtr);
+            xSemaphoreGive(this->mutex);
         }
 
-        void add(const queue_s *q, bool rstAttempts = false) {
-            mQueue[mWrPtr] = *q;
+        void add(QueueElement *q, bool rstAttempts = false) {
+            xSemaphoreTake(this->mutex, portMAX_DELAY);
+            mQueue[this->wrPtr] = *q;
             if(rstAttempts) {
-                mQueue[mWrPtr].attempts = DEFAULT_ATTEMPS;
-                mQueue[mWrPtr].attemptsMax = DEFAULT_ATTEMPS;
+                mQueue[this->wrPtr].attempts = DefaultAttempts;
+                mQueue[this->wrPtr].attemptsMax = DefaultAttempts;
             }
-            inc(&mWrPtr);
+            inc(&this->wrPtr);
+            xSemaphoreGive(this->mutex);
         }
 
-        void chgCmd(uint8_t cmd) {
-            mQueue[mRdPtr].cmd = cmd;
-            mQueue[mRdPtr].isDevControl = false;
-        }
-
-        void get(std::function<void(bool valid, const queue_s *q)> cb) {
-            if(mRdPtr == mWrPtr) {
-                cb(false, &mQueue[mRdPtr]); // empty
-                return;
+        void get(std::function<void(bool valid, QueueElement *q)> cb) {
+            if(this->rdPtr == this->wrPtr)
+                cb(false, nullptr); // empty
+            else {
+                xSemaphoreTake(this->mutex, portMAX_DELAY);
+                QueueElement el = mQueue[this->rdPtr];
+                inc(&this->rdPtr);
+                xSemaphoreGive(this->mutex);
+                cb(true, &el);
             }
-            cb(true, &mQueue[mRdPtr]);
         }
 
-        void cmdDone(bool keep = false) {
-            if(keep) {
-                mQueue[mRdPtr].attempts = DEFAULT_ATTEMPS;
-                mQueue[mRdPtr].attemptsMax = DEFAULT_ATTEMPS;
-                add(mQueue[mRdPtr]); // add to the end again
-            }
-            inc(&mRdPtr);
+        void cmdReset(QueueElement *q) {
+            q->attempts = DefaultAttempts;
+            q->attemptsMax = DefaultAttempts;
+            add(q); // add to the end again
         }
 
-        void setTs(const uint32_t *ts) {
-            mQueue[mRdPtr].ts = *ts;
-        }
-
-        void setAttempt(void) {
-            if(mQueue[mRdPtr].attempts)
-                mQueue[mRdPtr].attempts--;
-        }
-
-        void incrAttempt(uint8_t attempts = 1) {
-            mQueue[mRdPtr].attempts += attempts;
-            if (mQueue[mRdPtr].attempts > mQueue[mRdPtr].attemptsMax)
-                mQueue[mRdPtr].attemptsMax = mQueue[mRdPtr].attempts;
-        }
-
+    private:
         void inc(uint8_t *ptr) {
             if(++(*ptr) >= N)
                 *ptr = 0;
@@ -123,13 +174,14 @@ class CommQueue {
                 --(*ptr);
         }
 
-    private:
-        bool isIncluded(const queue_s *q) {
-            uint8_t ptr = mRdPtr;
-            while (ptr != mWrPtr) {
+        bool isIncluded(const QueueElement *q) {
+            uint8_t ptr = this->rdPtr;
+            while (ptr != this->wrPtr) {
                 if(mQueue[ptr].cmd == q->cmd) {
-                    if(mQueue[ptr].iv->id == q->iv->id)
-                        return true;
+                    if(mQueue[ptr].iv->id == q->iv->id) {
+                        if(mQueue[ptr].isDevControl == q->isDevControl)
+                            return true;
+                    }
                 }
                 inc(&ptr);
             }
@@ -137,9 +189,17 @@ class CommQueue {
         }
 
     protected:
-        std::array<queue_s, N> mQueue;
-        uint8_t mWrPtr = 0;
-        uint8_t mRdPtr = 0;
+        std::array<QueueElement, N> mQueue;
+
+    private:
+        uint8_t wrPtr;
+        uint8_t rdPtr;
+        #if defined(ESP32)
+        SemaphoreHandle_t mutex;
+        StaticSemaphore_t mutex_buffer;
+        #else
+        bool mutex;
+        #endif
 };
 
 

@@ -1,5 +1,9 @@
 # Development Changes
 
+## 0.8.147 - 2024-09-29
+* improved queue, added mutex
+* fixed send power limit #1757
+
 ## 0.8.146 - 2024-09-23
 * fix reset ticker #1754
 * disable MqTT second and minute ticker on network loss
