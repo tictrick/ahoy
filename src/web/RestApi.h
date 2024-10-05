@@ -998,6 +998,17 @@ class RestApi {
         #endif
         // Plugin ZeroExport - Ende
 
+        // Plugin Powermeter
+        #if defined(PLUGIN_POWERMETER)
+        void getPowermeter(JsonObject obj) {
+            obj[F("enabled")] = (bool) mConfig->plugin.powermeter.enabled;
+            obj[F("log_over_webserial")] = (bool) mConfig->plugin.powermeter.log_over_webserial;
+            obj[F("log_over_mqtt")] = (bool) mConfig->plugin.powermeter.log_over_mqtt;
+            obj[F("debug")] = (bool) mConfig->plugin.powermeter.debug;
+        }
+        #endif
+        // Plugin Powermeter - Ende
+
         void getMqttInfo(JsonObject obj) {
             obj[F("enabled")]   = (mConfig->mqtt.broker[0] != '\0');
             obj[F("connected")] = mApp->getMqttIsConnected();
@@ -1071,6 +1082,12 @@ class RestApi {
             getZeroExport(obj.createNestedObject(F("zeroExport")));
             #endif
             // Plugin ZeroExport - Ende
+
+            // Plugin Powermeter
+            #if defined(PLUGIN_POWERMETER)
+            getPowermeter(obj.createNestedObject(F("powermeter")));
+            #endif
+            // Plugin Powermeter - Ende
         }
 
         void getNetworks(JsonObject obj) {

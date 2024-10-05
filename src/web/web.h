@@ -681,6 +681,15 @@ class Web {
             #endif
             // Plugin ZeroExport - Ende
 
+            // Plugin Powermeter
+            #if defined(PLUGIN_POWERMETER)
+            mConfig->plugin.powermeter.enabled = (request->arg("pm_enabled") == "on");
+            mConfig->plugin.powermeter.log_over_webserial = (request->arg("pm_log_over_webserial") == "on");
+            mConfig->plugin.powermeter.log_over_mqtt = (request->arg("pm_log_over_mqtt") == "on");
+            mConfig->plugin.powermeter.debug = (request->arg("pm_debug") == "on");
+            #endif
+            // Plugin Powermeter - Ende
+
             mApp->saveSettings((request->arg("reboot") == "on"));
 
             AsyncWebServerResponse *response = beginResponse(request, 200, F("text/html; charset=UTF-8"), save_html, save_html_len);

@@ -357,6 +357,20 @@ typedef struct {
 #endif
 // Plugin ZeroExport - Ende
 
+// Plugin Powermeter
+#if defined(PLUGIN_POWERMETER)
+
+typedef struct {
+    bool enabled;
+    bool sleep;
+    bool log_over_webserial;
+    bool log_over_mqtt;
+    bool debug;
+} powermeter_t;
+
+#endif /* #if defined(PLUGIN_POWERMETER) */
+// Plugin Powermeter - Ende
+
 typedef struct {
     #if defined(PLUGIN_DISPLAY)
     display_t display;
@@ -365,6 +379,9 @@ typedef struct {
     char customLinkText[MAX_CUSTOM_LINK_TEXT_LEN];
     #if defined(PLUGIN_ZEROEXPORT)
     zeroExport_t zeroExport;
+    #endif
+    #if defined(PLUGIN_POWERMETER)
+    powermeter_t powermeter;
     #endif
 } plugins_t;
 
@@ -753,6 +770,17 @@ class settings {
 //                    mCfg.plugin.zeroExport.groups[group].inverters[inv].limit = -1;
 //                    mCfg.plugin.zeroExport.groups[group].inverters[inv].limitAck = false;
             // Plugin ZeroExport - Ende
+            #endif
+
+            // Plugin Powermeter
+            #if defined(PLUGIN_POWERMETER)
+            mCfg.plugin.powermeter.enabled = false;
+            mCfg.plugin.powermeter.sleep = false;
+            mCfg.plugin.powermeter.log_over_webserial = false;
+            mCfg.plugin.powermeter.log_over_mqtt = false;
+            mCfg.plugin.powermeter.debug = false;
+
+            // Plugin Powermeter - Ende
             #endif
 
         }
@@ -1145,6 +1173,30 @@ class settings {
         #endif
         // Plugin ZeroExport - Ende
 
+        // Plugin Powermeter
+        #if defined(PLUGIN_POWERMETER)
+        void jsonPowermeter(JsonObject obj, bool set = false) {
+            if(set) {
+                obj[F("enabled")] = mCfg.plugin.powermeter.enabled;
+                obj[F("log_over_webserial")] = mCfg.plugin.powermeter.log_over_webserial;
+                obj[F("log_over_mqtt")] = mCfg.plugin.powermeter.log_over_mqtt;
+                obj[F("debug")] = mCfg.plugin.powermeter.debug;
+            }
+            else
+            {
+                if (obj.containsKey(F("enabled")))
+                    getVal<bool>(obj, F("enabled"), &mCfg.plugin.powermeter.enabled);
+                if (obj.containsKey(F("log_over_webserial")))
+                    getVal<bool>(obj, F("log_over_webserial"), &mCfg.plugin.powermeter.log_over_webserial);
+                if (obj.containsKey(F("log_over_mqtt")))
+                    getVal<bool>(obj, F("log_over_mqtt"), &mCfg.plugin.powermeter.log_over_mqtt);
+                if (obj.containsKey(F("debug")))
+                    getVal<bool>(obj, F("debug"), &mCfg.plugin.powermeter.debug);
+            }
+        }
+        #endif
+        // Plugin Powermeter - Ende
+
         void jsonPlugin(JsonObject obj, bool set = false) {
             if(set) {
                 #if defined(PLUGIN_DISPLAY)
@@ -1173,6 +1225,11 @@ class settings {
                 jsonZeroExport(obj.createNestedObject("zeroExport"), set);
                 #endif
                 // Plugin ZeroExport - Ende
+                // Plugin Powermeter
+                #if defined(PLUGIN_POWERMETER)
+                jsonPowermeter(obj.createNestedObject("powermeter"), set);
+                #endif
+                // Plugin Powermeter - Ende
             } else {
                 #if defined(PLUGIN_DISPLAY)
                 JsonObject disp = obj["disp"];
@@ -1200,6 +1257,11 @@ class settings {
                 jsonZeroExport(obj["zeroExport"], set);
                 #endif
                 // Plugin ZeroExport - Ende
+                // Plugin Powermeter
+                #if defined(PLUGIN_POWERMETER)
+                jsonPowermeter(obj["powermeter"], set);
+                #endif
+                // Plugin Powermeter - Ende
             }
         }
 

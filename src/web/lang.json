@@ -824,6 +824,31 @@
                     "de": "kein Netzwerk gefunden"
                 },
                 {
+                    "token": "PM",
+                    "en": "Power Meter",
+                    "de": "Leistungsmesser"
+                },
+                {
+                    "token": "PM_ENABLED",
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                },
+                {
+                    "token": "PM_LOG_OVER_WEBSERIAL",
+                    "en": "Log over Webserial",
+                    "de": "Log in Webserial"
+                },
+                {
+                    "token": "PM_LOG_OVER_MQTT",
+                    "en": "Log over MQTT",
+                    "de": "Log in MQTT"
+                },
+                {
+                    "token": "PM_DEBUG",
+                    "en": "Debug",
+                    "de": "Debug"
+                },
+                {
                 "token": "ZE",
                     "en": "Demand-optimized power control",
                     "de": "Bedarfsorientierte Leistungsregelung"

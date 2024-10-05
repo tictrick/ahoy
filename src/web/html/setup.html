@@ -331,6 +331,27 @@
                     </div>
                     <!--ENDIF_PLUGIN_ZEROEXPORT-->
 
+                    <button type="button" class="s_collapsible" id="powermeter_button">{#PM}</button>
+                    <!--IF_PLUGIN_POWERMETER-->
+                    <div class="s_content" id="powermeter">
+                        <fieldset class="mb-4">
+                            <legend class="des">{#PM}</legend>
+                            <div id="powermeterType"></div>
+                            <div class="row mb-3">
+                                <div class="col-12 col-sm-3 my-2">{#PM_ENABLED}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="pm_enabled"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#PM_LOG_OVER_WEBSERIAL}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="pm_log_over_webserial"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#PM_LOG_OVER_MQTT}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="pm_log_over_mqtt"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#PM_DEBUG}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="pm_debug"/></div>
+                            </div>
+                            <div id="pm_groups"></div>
+                        </fieldset>
+                    </div>
+                    <!--ENDIF_PLUGIN_POWERMETER-->
+
                     <div class="row mb-4 mt-4">
                         <div class="col-8 col-sm-3">{#BTN_REBOOT_SUCCESSFUL_SAVE}</div>
                         <div class="col-4 col-sm-9">
@@ -1870,6 +1891,30 @@
                 /*ENDIF_PLUGIN_ZEROEXPORT*/
             }
 
+            function parsePowermeter(obj, type) {
+
+                /*IF_PLUGIN_POWERMETER*/
+
+                    // enabled
+                    document.getElementsByName("pm_enabled")[0].checked = obj["enabled"];
+
+                    // log_over_webserial
+                    document.getElementsByName("pm_log_over_webserial")[0].checked = obj["log_over_webserial"];
+
+                    // log_over_mqtt
+                    document.getElementsByName("pm_log_over_mqtt")[0].checked = obj["log_over_mqtt"];
+
+                    // debug
+                    document.getElementsByName("pm_debug")[0].checked = obj["debug"];
+
+                /*ELSE*/
+                    var e = document.getElementById("powermeter_button");
+                        e.textContent += " (only for ESP32-S3 available)";
+                        e.disabled = true;
+                        element.classList.add("disabled");
+                /*ENDIF_PLUGIN_POWERMETER*/
+            }
+
             function parse(root) {
                 if(null != root) {
                     parseGeneric(root.generic);
@@ -1891,6 +1936,7 @@
                     parseDisplay(root.display, root.system.esp_type, root.system);
                     /*ENDIF_PLUGIN_DISPLAY*/
                     parseZeroExport(root["zeroExport"], root["system"]["esp_type"]);
+                    parsePowermeter(root["powermeter"], root["system"]["esp_type"]);
 
                     getAjax("/api/inverter/list", parseIv);
                 }

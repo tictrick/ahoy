@@ -5,8 +5,8 @@
 
 #if defined(PLUGIN_ZEROEXPORT)
 
-#ifndef __POWERMETER_H__
-#define __POWERMETER_H__
+#ifndef __POWERMETERx_H__
+#define __POWERMETERx_H__
 
 #include <AsyncJson.h>
 #include <HTTPClient.h>
@@ -688,6 +688,6 @@ class powermeter {
     }
 };
 
-#endif /*__POWERMETER_H__*/
+#endif /*__POWERMETERx_H__*/
 
 #endif /* #if defined(PLUGIN_ZEROEXPORT) */

@@ -89,6 +89,14 @@ typedef ZeroExport<HmSystemType> ZeroExportType;
 #endif
 // Plugin ZeroExport - Ende
 
+// Plugin Powermeter
+#if defined(PLUGIN_POWERMETER)
+#include "plugins/powermeter/powermeter.h"
+//typedef Powermeter<HmSystemType> PowermeterType;
+#warning "TODO powermeter"
+#endif
+// Plugin Powermeter - Ende
+
 class app : public IApp, public ah::Scheduler {
    public:
         app();
@@ -525,6 +533,13 @@ class app : public IApp, public ah::Scheduler {
         ZeroExportType mZeroExport;
         #endif
         // Plugin ZeroExport - Ende
+
+        // Plugin Powermeter
+        #if defined(PLUGIN_POWERMETER)
+//        PowermeterType mPowermeter;
+        #warning "TODO powermeter"
+        #endif
+        // Plugin Powermeter - Ende
 };
 
 #endif /*__APP_H__*/
