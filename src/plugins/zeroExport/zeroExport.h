@@ -898,9 +898,7 @@ class ZeroExport {
 
         // Log over MQTT
         if (mCfg->log_over_mqtt) {
-            if (mMqtt->isConnected()) {
-                mMqtt->publish("zero/log", _log.toString().c_str(), false);
-            }
+            mMqtt->publish("zero/log", _log.toString().c_str(), false);
         }
     }
 
