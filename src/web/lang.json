@@ -6,7 +6,7 @@
                 {
                     "token": "NAV_WIZARD",
                     "en": "Setup Wizard",
-                    "de": "Einrichtungsassitent"
+                    "de": "Einrichtungsassistent"
                 },
                 {
                     "token": "NAV_LIVE",
@@ -236,7 +236,7 @@
                 {
                     "token": "LOG_PRINT_TRACES",
                     "en": "Print whole traces in Log",
-                    "de": "alle Informationen in Log schreiben"
+                    "de": "alle Informationen ins Log schreiben"
                 },
                 {
                     "token": "LOG_TO_MQTT",
@@ -697,6 +697,16 @@
                     "token": "INV_PAUSE_DURING_NIGHT",
                     "en": "Pause communication during night (lat. and lon. need to be set)",
                     "de": "Kommunikation w&auml;hrend der Nacht pausieren (Breiten- und L&auml;ngengrad m&uuml;ssen gesetzt sein"
+                },
+                {
+                    "token": "INV_SEARCH",
+                    "en": "Catch Inverter",
+                    "de": "Wechselrichter suchen"
+                },
+                {
+                    "token": "BTN_SEARCH",
+                    "en": "start",
+                    "de": "starten"
                 },
                 {
                     "token": "BTN_SAVE",

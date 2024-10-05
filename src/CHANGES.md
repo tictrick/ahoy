@@ -1,5 +1,24 @@
 # Development Changes
 
+## 0.8.151 - 2024-10-03
+* don't interrupt current command by setting a new limit #1757
+* add button for CMT inverters to catch them independend on which frequency they were before #1749
+* increased communication queue length from 100 to 200 for ESP32-S3
+
+## 0.8.150 - 2024-10-02
+* fix nullptr exception
+* modified MqTT to not publish while not connected
+* removed patch for Webserver library - obsolete
+
+## 0.8.149 - 2024-10-01
+* fixed send power limit #1757
+* merged: Fix minor typos #1758
+* fix redirect after login with newest webserver version
+
+## 0.8.148 - 2024-09-30
+* fixed send power limit #1757
+* fix redirect after login
+
 ## 0.8.147 - 2024-09-29
 * improved queue, added mutex
 * fixed send power limit #1757

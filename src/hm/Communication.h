@@ -37,13 +37,6 @@ class Communication : public CommQueue<> {
             mPrintWholeTrace = printWholeTrace;
         }
 
-        void addImportant(Inverter<> *iv, uint8_t cmd) {
-            if(!mIsDevControl) // only reset communication once there is no other devcontrol command
-                mState = States::RESET; // cancel current operation
-            mIsDevControl = true;
-            CommQueue::addImportant(iv, cmd);
-        }
-
         void addPayloadListener(payloadListenerType cb) {
             mCbPayload = cb;
         }
@@ -69,7 +62,7 @@ class Communication : public CommQueue<> {
         }
 
         void loop() {
-            if(States::RESET == mState) {
+            if(States::IDLE == mState) {
                 get([this](bool valid, QueueElement *q) {
                     if(!valid) {
                         if(mPrintSequenceDuration) {
@@ -78,12 +71,12 @@ class Communication : public CommQueue<> {
                             DBGPRINT(String(millis() - mLastEmptyQueueMillis));
                             DBGPRINTLN(F("ms"));
                             DBGPRINTLN(F("-----"));
-                            el.iv = nullptr;
                         }
                         return; // empty
                     }
 
-                    el = *q;
+                    el = std::move(*q);
+                    mState = States::INIT;
                     if(!mPrintSequenceDuration) // entry was added to the queue
                         mLastEmptyQueueMillis = millis();
                     mPrintSequenceDuration = true;
@@ -97,7 +90,11 @@ class Communication : public CommQueue<> {
     private:
         inline void innerLoop(QueueElement *q) {
             switch(mState) {
-                case States::RESET:
+                default:
+                case States::IDLE:
+                    break;
+
+                case States::INIT:
                     if (!mWaitTime.isTimeout())
                         return;
 
@@ -105,9 +102,6 @@ class Communication : public CommQueue<> {
                     for(uint8_t i = 0; i < MAX_PAYLOAD_ENTRIES; i++) {
                         mLocalBuf[i].len = 0;
                     }
-
-                    if(!q->isDevControl)
-                        mIsDevControl = false; // reset devcontrol flag
 
                     if(*mSerialDebug)
                         mHeu.printStatus(q->iv);
@@ -125,7 +119,8 @@ class Communication : public CommQueue<> {
                     if((q->iv->ivGen == IV_MI) && ((q->cmd == MI_REQ_CH1) || (q->cmd == MI_REQ_4CH)))
                         q->incrAttempt(q->iv->channels); // 2 more attempts for 2ch, 4 more for 4ch
 
-                    mState = (NULL == q->iv->radio) ? States::RESET : States::START;
+                    if(NULL != q->iv->radio)
+                        mState = States::START;
                     break;
 
                 case States::START:
@@ -218,11 +213,11 @@ class Communication : public CommQueue<> {
                                         mHeu.setIvRetriesGood(q->iv,p->millis < LIMIT_VERYFAST_IV);
                                 }
                             } else if (p->packet[0] == (TX_REQ_DEVCONTROL + ALL_FRAMES)) { // response from dev control command
+                                q->iv->radio->mBufCtrl.pop();
                                 if(parseDevCtrl(p, q))
                                     closeRequest(q, true);
                                 else
                                     closeRequest(q, false);
-                                q->iv->radio->mBufCtrl.pop();
                                 return; // don't wait for empty buffer
                             } else if(IV_MI == q->iv->ivGen) {
                                 parseMiFrame(p, q);
@@ -308,7 +303,7 @@ class Communication : public CommQueue<> {
                                 q->iv->radioStatistics.txCnt--;
                                 q->iv->radioStatistics.retransmits++;
                                 mCompleteRetry = true;
-                                mState = States::RESET;
+                                mState = States::IDLE;
                                 return;
                             }
                         }
@@ -563,7 +558,7 @@ class Communication : public CommQueue<> {
                 } else
                     DBGPRINTLN(F("-> complete retransmit"));
                 mCompleteRetry = true;
-                mState = States::RESET;
+                mState = States::IDLE;
                 return false;
             }
 
@@ -672,15 +667,16 @@ class Communication : public CommQueue<> {
             if(q->isDevControl)
                 keep = !crcPass;
 
-            if(keep)
-                cmdReset(q);
-
             q->iv->mGotFragment = false;
             q->iv->mGotLastMsg  = false;
             q->iv->miMultiParts = 0;
+
+            if(keep)
+                cmdReset(q); // q will be zero'ed after that command
+
             mIsRetransmit       = false;
             mCompleteRetry      = false;
-            mState              = States::RESET;
+            mState              = States::IDLE;
             DBGPRINTLN(F("-----"));
         }
 
@@ -827,7 +823,7 @@ class Communication : public CommQueue<> {
         inline void miDataDecode(packet_t *p, QueueElement *q) {
             record_t<> *rec = q->iv->getRecordStruct(RealTimeRunData_Debug);  // choose the parser
             rec->ts = q->ts;
-            //mState = States::RESET;
+            //mState = States::IDLE;
             if(q->iv->miMultiParts < 6)
                 q->iv->miMultiParts += 6;
 
@@ -1061,7 +1057,7 @@ class Communication : public CommQueue<> {
 
     private:
         enum class States : uint8_t {
-            RESET, START, WAIT, CHECK_FRAMES, CHECK_PACKAGE
+            IDLE, INIT, START, WAIT, CHECK_FRAMES, CHECK_PACKAGE
         };
 
         typedef struct {
@@ -1071,7 +1067,7 @@ class Communication : public CommQueue<> {
         } frame_t;
 
     private:
-        States mState = States::RESET;
+        States mState = States::IDLE;
         uint32_t *mTimestamp = nullptr;
         QueueElement el;
         bool *mPrivacyMode = nullptr, *mSerialDebug = nullptr, *mPrintWholeTrace = nullptr;
@@ -1093,7 +1089,6 @@ class Communication : public CommQueue<> {
         Heuristic mHeu;
         uint32_t mLastEmptyQueueMillis = 0;
         bool mPrintSequenceDuration = false;
-        bool mIsDevControl = false; // holds if current command is devcontrol
 };
 
 #endif /*__COMMUNICATION_H__*/
