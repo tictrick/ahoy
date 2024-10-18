@@ -690,6 +690,15 @@ class Web {
             #endif
             // Plugin Powermeter - Ende
 
+            // Plugin Consumer
+            #if defined(PLUGIN_CONSUMER)
+            mConfig->plugin.consumer.enabled = (request->arg("con_enabled") == "on");
+            mConfig->plugin.consumer.log_over_webserial = (request->arg("con_log_over_webserial") == "on");
+            mConfig->plugin.consumer.log_over_mqtt = (request->arg("con_log_over_mqtt") == "on");
+            mConfig->plugin.consumer.debug = (request->arg("con_debug") == "on");
+            #endif
+            // Plugin Consumer - Ende
+
             mApp->saveSettings((request->arg("reboot") == "on"));
 
             AsyncWebServerResponse *response = beginResponse(request, 200, F("text/html; charset=UTF-8"), save_html, save_html_len);

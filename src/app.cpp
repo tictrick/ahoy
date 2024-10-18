@@ -140,6 +140,18 @@ void app::setup() {
     #endif /*PLUGIN_ZEROEXPORT*/
     // Plugin ZeroExport - Ende
 
+    // Plugin Powermeter
+    #if defined(PLUGIN_POWERMETER)
+    mPowermeter.setup(this, &mTimestamp, &mConfig->plugin.powermeter, &mSys, mConfig, &mApi, &mMqtt);
+    #endif /*PLUGIN_POWERMETER*/
+    // Plugin Powermeter - Ende
+
+    // Plugin Consumer
+    #if defined(PLUGIN_CONSUMER)
+    mConsumer.setup(this, &mTimestamp, &mConfig->plugin.consumer, &mSys, mConfig, &mApi, &mMqtt);
+    #endif /*PLUGIN_CONSUMER*/
+    // Plugin Consumer - Ende
+
     #if defined(ENABLE_HISTORY)
     mHistory.setup(this, &mSys, mConfig, &mTimestamp);
     #endif /*ENABLE_HISTORY*/
@@ -186,6 +198,22 @@ void app::loop(void) {
     }
     #endif
     // Plugin ZeroExport - Ende
+
+    yield();
+
+    // Plugin Powermeter
+    #if defined(PLUGIN_POWERMETER)
+    mPowermeter.loop();
+    #endif
+    // Plugin Powermeter - Ende
+
+    yield();
+
+    // Plugin Consumer
+    #if defined(PLUGIN_CONSUMER)
+    mConsumer.loop();
+    #endif
+    // Plugin Consumer - Ende
 
     yield();
 }

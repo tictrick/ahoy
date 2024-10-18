@@ -931,7 +931,7 @@ class ZeroExport {
 
     unsigned long mLastRun = 0;
 
-    powermeter mPowermeter;
+    powermeterx mPowermeter;
 
     PubMqttType *mMqtt = nullptr;
     bool mIsSubscribed = false;

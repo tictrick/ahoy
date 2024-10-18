@@ -824,31 +824,6 @@
                     "de": "kein Netzwerk gefunden"
                 },
                 {
-                    "token": "PM",
-                    "en": "Power Meter",
-                    "de": "Leistungsmesser"
-                },
-                {
-                    "token": "PM_ENABLED",
-                    "en": "Enabled",
-                    "de": "Aktiviert"
-                },
-                {
-                    "token": "PM_LOG_OVER_WEBSERIAL",
-                    "en": "Log over Webserial",
-                    "de": "Log in Webserial"
-                },
-                {
-                    "token": "PM_LOG_OVER_MQTT",
-                    "en": "Log over MQTT",
-                    "de": "Log in MQTT"
-                },
-                {
-                    "token": "PM_DEBUG",
-                    "en": "Debug",
-                    "de": "Debug"
-                },
-                {
                 "token": "ZE",
                     "en": "Demand-optimized power control",
                     "de": "Bedarfsorientierte Leistungsregelung"
@@ -1044,6 +1019,186 @@
                     "de": "Power:"
                 },
                 {
+                    "token": "PM",
+                    "en": "Power Meter",
+                    "de": "Leistungsmesser"
+                },
+                {
+                    "token": "PM_ENABLED",
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                },
+                {
+                    "token": "PM_LOG_OVER_WEBSERIAL",
+                    "en": "Log over Webserial",
+                    "de": "Log in Webserial"
+                },
+                {
+                    "token": "PM_LOG_OVER_MQTT",
+                    "en": "Log over MQTT",
+                    "de": "Log in MQTT"
+                },
+                {
+                    "token": "PM_DEBUG",
+                    "en": "Debug",
+                    "de": "Debug"
+                },
+                {
+                    "token": "PM_POWERMETER_ID",
+                    "en": "Id:",
+                    "de": "Id:"
+                },
+                {
+                    "token": "PM_POWERMETER_NAME",
+                    "en": "Name:",
+                    "de": "Name:"
+                },
+                {
+                    "token": "PM_POWERMETER_ENABLED",
+                    "en": "State:",
+                    "de": "Status:"
+                },
+                {
+                    "token": "PM_POWERMETER_POWER",
+                    "en": "Power (W):",
+                    "de": "Leistung (W):"
+                },
+                {
+                    "token": "PM_POWERMETER_EDIT",
+                    "en": "Edit",
+                    "de": "Bearbeiten"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_GENERAL",
+                    "en": "General:",
+                    "de": "Allgemein:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_GENERAL_ID",
+                    "en": "Id:",
+                    "de": "Id:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_GENERAL_NAME",
+                    "en": "Name:",
+                    "de": "Name:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_GENERAL_ENABLE",
+                    "en": "Enabled:",
+                    "de": "Aktiviert:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_PROPERTIES",
+                    "en": "Properties:",
+                    "de": "Eigenschaften:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_OUTPUT",
+                    "en": "Output:",
+                    "de": "Output:"
+                },
+                {
+                    "token": "PM_POWERMETER_MODAL_TAB_ADVANCED",
+                    "en": "Advanced:",
+                    "de": "Erweitert:"
+                },
+                {
+                    "token": "CON",
+                    "en": "Consumer",
+                    "de": "Verbraucher"
+                },
+                {
+                    "token": "CON_ENABLED",
+                    "en": "Enabled",
+                    "de": "Aktiviert"
+                },
+                {
+                    "token": "CON_LOG_OVER_WEBSERIAL",
+                    "en": "Log over Webserial",
+                    "de": "Log in Webserial"
+                },
+                {
+                    "token": "CON_LOG_OVER_MQTT",
+                    "en": "Log over MQTT",
+                    "de": "Log in MQTT"
+                },
+                {
+                    "token": "CON_DEBUG",
+                    "en": "Debug",
+                    "de": "Debug"
+                },
+                {
+                    "token": "CON_CONSUMER_ID",
+                    "en": "Id:",
+                    "de": "Id:"
+                },
+                {
+                    "token": "CON_CONSUMER_NAME",
+                    "en": "Name:",
+                    "de": "Name:"
+                },
+                {
+                    "token": "CON_CONSUMER_ENABLED",
+                    "en": "State:",
+                    "de": "Status:"
+                },
+                {
+                    "token": "CON_CONSUMER_POWER",
+                    "en": "Power (W):",
+                    "de": "Leistung (W):"
+                },
+                {
+                    "token": "CON_CONSUMER_EDIT",
+                    "en": "Edit",
+                    "de": "Bearbeiten"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_GENERAL",
+                    "en": "General:",
+                    "de": "Allgemein:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_GENERAL_ID",
+                    "en": "Id:",
+                    "de": "Id:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_GENERAL_NAME",
+                    "en": "Name:",
+                    "de": "Name:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_GENERAL_ENABLE",
+                    "en": "Enabled:",
+                    "de": "Aktiviert:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_OUTPUT",
+                    "en": "Output:",
+                    "de": "Output:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_INPUT",
+                    "en": "Input:",
+                    "de": "Input:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_PROPERTIES",
+                    "en": "Properties:",
+                    "de": "Eigenschaften:"
+                },
+                {
+                    "token": "CON_CONSUMER_MODAL_TAB_ADVAMCED",
+                    "en": "Advanced:",
+                    "de": "Erweitert:"
+                },
+
+
+
+
+
+                {
                     "token": "BTN_ON",
                     "en": "On",
                     "de": "Ein"
@@ -1052,6 +1207,16 @@
                     "token": "BTN_OFF",
                     "en": "Off",
                     "de": "Aus"
+                },
+                {
+                    "token": "BTN_SAVE",
+                    "en": "Save",
+                    "de": "Speichern"
+                },
+                {
+                    "token": "BTN_DEL",
+                    "en": "Delete",
+                    "de": "Löschen"
                 },
                 {
                     "token": "ZE_GROUP_TAB_ADVANCED",

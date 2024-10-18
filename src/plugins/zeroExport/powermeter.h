@@ -28,17 +28,17 @@ typedef struct {
 } OBISHandler;
 #endif
 
-class powermeter {
+class powermeterx {
    public:
     /** powermeter
      * constructor
      */
-    powermeter() {}
+    powermeterx() {}
 
     /** ~powermeter
      * destructor
      */
-    ~powermeter() {}
+    ~powermeterx() {}
 
     /** setup
      * Initialisierung

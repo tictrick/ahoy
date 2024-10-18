@@ -360,16 +360,48 @@ typedef struct {
 // Plugin Powermeter
 #if defined(PLUGIN_POWERMETER)
 
+#define POWERMETER_MAX_CFG                          8
+#define POWERMETER_CFG_MAX_LEN_NAME                25
+
+typedef struct {
+    bool enabled;
+    char name[POWERMETER_CFG_MAX_LEN_NAME];
+} powermeterCfg_t;
+
 typedef struct {
     bool enabled;
     bool sleep;
     bool log_over_webserial;
     bool log_over_mqtt;
     bool debug;
+    powermeterCfg_t cfg[POWERMETER_MAX_CFG];
 } powermeter_t;
 
 #endif /* #if defined(PLUGIN_POWERMETER) */
 // Plugin Powermeter - Ende
+
+// Plugin Consumer
+#if defined(PLUGIN_CONSUMER)
+
+#define CONSUMER_MAX_CFG                            8
+#define CONSUMER_CFG_MAX_LEN_NAME                  25
+
+typedef struct {
+    bool enabled;
+    char name[CONSUMER_CFG_MAX_LEN_NAME];
+} consumerCfg_t;
+
+typedef struct {
+    bool enabled;
+    bool sleep;
+    bool log_over_webserial;
+    bool log_over_mqtt;
+    bool debug;
+    consumerCfg_t cfg[CONSUMER_MAX_CFG];
+} consumer_t;
+
+#endif /* #if defined(PLUGIN_CONSUMER) */
+// Plugin Consumer - Ende
 
 typedef struct {
     #if defined(PLUGIN_DISPLAY)
@@ -382,6 +414,9 @@ typedef struct {
     #endif
     #if defined(PLUGIN_POWERMETER)
     powermeter_t powermeter;
+    #endif
+    #if defined(PLUGIN_CONSUMER)
+    consumer_t consumer;
     #endif
 } plugins_t;
 
@@ -779,10 +814,20 @@ class settings {
             mCfg.plugin.powermeter.log_over_webserial = false;
             mCfg.plugin.powermeter.log_over_mqtt = false;
             mCfg.plugin.powermeter.debug = false;
-
+#warning "powermeter default";
             // Plugin Powermeter - Ende
             #endif
 
+            // Plugin Consumer
+            #if defined(PLUGIN_CONSUMER)
+            mCfg.plugin.consumer.enabled = false;
+            mCfg.plugin.consumer.sleep = false;
+            mCfg.plugin.consumer.log_over_webserial = false;
+            mCfg.plugin.consumer.log_over_mqtt = false;
+            mCfg.plugin.consumer.debug = false;
+#warning "consumer default";
+            // Plugin Consumer - Ende
+            #endif
         }
 
         void loadAddedDefaults() {
@@ -1035,7 +1080,6 @@ class settings {
 
         // Plugin ZeroExport
         #if defined(PLUGIN_ZEROEXPORT)
-
         void jsonZeroExportGroupInverter(JsonObject obj, uint8_t group, uint8_t inv, bool set = false) {
             if(set) {
                 obj[F("enabled")] = mCfg.plugin.zeroExport.groups[group].inverters[inv].enabled;
@@ -1175,12 +1219,33 @@ class settings {
 
         // Plugin Powermeter
         #if defined(PLUGIN_POWERMETER)
+        void jsonPowermeterCfg(JsonObject obj, uint8_t cfgIndex, bool set = false) {
+            if(set) {
+                // General
+                obj[F("enabled")] = mCfg.plugin.powermeter.cfg[cfgIndex].enabled;
+                obj[F("name")] = mCfg.plugin.powermeter.cfg[cfgIndex].name;
+#warning "powermeter cfg";
+            } else {
+                // General
+                if (obj.containsKey(F("enabled")))
+                    getVal<bool>(obj, F("enabled"), &mCfg.plugin.powermeter.cfg[cfgIndex].enabled);
+                if (obj.containsKey(F("name")))
+                    getChar(obj, F("name"), mCfg.plugin.powermeter.cfg[cfgIndex].name, POWERMETER_CFG_MAX_LEN_NAME);
+#warning "powermeter cfg";
+            }
+        }
+
         void jsonPowermeter(JsonObject obj, bool set = false) {
             if(set) {
                 obj[F("enabled")] = mCfg.plugin.powermeter.enabled;
                 obj[F("log_over_webserial")] = mCfg.plugin.powermeter.log_over_webserial;
                 obj[F("log_over_mqtt")] = mCfg.plugin.powermeter.log_over_mqtt;
                 obj[F("debug")] = mCfg.plugin.powermeter.debug;
+#warning "powermeter cfg";
+                JsonArray cfgArr = obj.createNestedArray(F("cfg"));
+                for(uint8_t cfgIndex = 0; cfgIndex < POWERMETER_MAX_CFG; cfgIndex++) {
+                    jsonZeroExportGroup(cfgArr.createNestedObject(), cfgIndex, set);
+                }
             }
             else
             {
@@ -1192,10 +1257,67 @@ class settings {
                     getVal<bool>(obj, F("log_over_mqtt"), &mCfg.plugin.powermeter.log_over_mqtt);
                 if (obj.containsKey(F("debug")))
                     getVal<bool>(obj, F("debug"), &mCfg.plugin.powermeter.debug);
+#warning "powermeter cfg";
+                if (obj.containsKey(F("cfg"))) {
+                    for(uint8_t cfgIndex = 0; cfgIndex < POWERMETER_MAX_CFG; cfgIndex++) {
+                        jsonZeroExportGroup(obj[F("cfg")][cfgIndex], cfgIndex, set);
+                    }
+                }
             }
         }
         #endif
         // Plugin Powermeter - Ende
+
+        // Plugin Consumer
+        #if defined(PLUGIN_CONSUMER)
+        void jsonConsumerCfg(JsonObject obj, uint8_t cfgIndex, bool set = false) {
+            if(set) {
+                // General
+                obj[F("enabled")] = mCfg.plugin.consumer.cfg[cfgIndex].enabled;
+                obj[F("name")] = mCfg.plugin.consumer.cfg[cfgIndex].name;
+#warning "consumer cfg";
+            } else {
+                // General
+                if (obj.containsKey(F("enabled")))
+                    getVal<bool>(obj, F("enabled"), &mCfg.plugin.consumer.cfg[cfgIndex].enabled);
+                if (obj.containsKey(F("name")))
+                    getChar(obj, F("name"), mCfg.plugin.consumer.cfg[cfgIndex].name, CONSUMER_CFG_MAX_LEN_NAME);
+#warning "consumer cfg";
+            }
+        }
+
+        void jsonConsumer(JsonObject obj, bool set = false) {
+            if(set) {
+                obj[F("enabled")] = mCfg.plugin.consumer.enabled;
+                obj[F("log_over_webserial")] = mCfg.plugin.consumer.log_over_webserial;
+                obj[F("log_over_mqtt")] = mCfg.plugin.consumer.log_over_mqtt;
+                obj[F("debug")] = mCfg.plugin.consumer.debug;
+#warning "consumer cfg";
+                JsonArray cfgArr = obj.createNestedArray(F("cfg"));
+                for(uint8_t cfgIndex = 0; cfgIndex < CONSUMER_MAX_CFG; cfgIndex++) {
+                    jsonZeroExportGroup(cfgArr.createNestedObject(), cfgIndex, set);
+                }
+            }
+            else
+            {
+                if (obj.containsKey(F("enabled")))
+                    getVal<bool>(obj, F("enabled"), &mCfg.plugin.consumer.enabled);
+                if (obj.containsKey(F("log_over_webserial")))
+                    getVal<bool>(obj, F("log_over_webserial"), &mCfg.plugin.consumer.log_over_webserial);
+                if (obj.containsKey(F("log_over_mqtt")))
+                    getVal<bool>(obj, F("log_over_mqtt"), &mCfg.plugin.consumer.log_over_mqtt);
+                if (obj.containsKey(F("debug")))
+                    getVal<bool>(obj, F("debug"), &mCfg.plugin.consumer.debug);
+#warning "consumer cfg";
+                if (obj.containsKey(F("cfg"))) {
+                    for(uint8_t cfgIndex = 0; cfgIndex < CONSUMER_MAX_CFG; cfgIndex++) {
+                        jsonZeroExportGroup(obj[F("cfg")][cfgIndex], cfgIndex, set);
+                    }
+                }
+            }
+        }
+        #endif
+        // Plugin Consumer - Ende
 
         void jsonPlugin(JsonObject obj, bool set = false) {
             if(set) {
@@ -1230,6 +1352,11 @@ class settings {
                 jsonPowermeter(obj.createNestedObject("powermeter"), set);
                 #endif
                 // Plugin Powermeter - Ende
+                // Plugin Consumer
+                #if defined(PLUGIN_CONSUMER)
+                jsonConsumer(obj.createNestedObject("consumer"), set);
+                #endif
+                // Plugin Consumer - Ende
             } else {
                 #if defined(PLUGIN_DISPLAY)
                 JsonObject disp = obj["disp"];
@@ -1262,6 +1389,11 @@ class settings {
                 jsonPowermeter(obj["powermeter"], set);
                 #endif
                 // Plugin Powermeter - Ende
+                // Plugin Consumer
+                #if defined(PLUGIN_CONSUMER)
+                jsonConsumer(obj["consumer"], set);
+                #endif
+                // Plugin Consumer - Ende
             }
         }
 

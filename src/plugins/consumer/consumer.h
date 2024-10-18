@@ -3,10 +3,10 @@
 // Creative Commons - https://creativecommons.org/licenses/by-nc-sa/4.0/deed
 //-----------------------------------------------------------------------------
 
-#if defined(PLUGIN_POWERMETER)
+#if defined(PLUGIN_CONSUMER)
 
-#ifndef __POWERMETER_H__
-#define __POWERMETER_H__
+#ifndef __CONSUMER_H__
+#define __CONSUMER_H__
 
 
 
@@ -14,17 +14,17 @@
 
 template <class HMSYSTEM>
 
-class Powermeter {
+class Consumer {
    public:
-    /** Powermeter
+    /** Consumer
      * constructor
      */
-    Powermeter() {}
+    Consumer() {}
 
-    /** ~Powermeter
+    /** ~Consumer
      * destructor
      */
-    ~Powermeter() {}
+    ~Consumer() {}
 
     /** setup
      * Initialisierung
@@ -35,7 +35,7 @@ class Powermeter {
      * @param *mqtt
      * @returns void
      */
-    void setup(IApp *app, uint32_t *timestamp, powermeter_t *cfg, HMSYSTEM *sys, settings_t *config, RestApiType *api, PubMqttType *mqtt) {
+    void setup(IApp *app, uint32_t *timestamp, consumer_t *cfg, HMSYSTEM *sys, settings_t *config, RestApiType *api, PubMqttType *mqtt) {
     }
 
     /** loop
@@ -54,6 +54,6 @@ class Powermeter {
 
 
 
-#endif /*__POWERMETER_H__*/
+#endif /*__CONSUMER_H__*/
 
-#endif /* #if defined(PLUGIN_POWERMETER) */
+#endif /* #if defined(PLUGIN_CONSUMER) */

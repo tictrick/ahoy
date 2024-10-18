@@ -347,10 +347,31 @@
                                 <div class="col-12 col-sm-3 my-2">{#PM_DEBUG}</div>
                                 <div class="col-12 col-sm-9"><input type="checkbox" name="pm_debug"/></div>
                             </div>
-                            <div id="pm_groups"></div>
+                            <div id="powermeters"></div>
                         </fieldset>
                     </div>
                     <!--ENDIF_PLUGIN_POWERMETER-->
+
+                    <button type="button" class="s_collapsible" id="consumer_button">{#CON}</button>
+                    <!--IF_PLUGIN_CONSUMER-->
+                    <div class="s_content" id="consumer">
+                        <fieldset class="mb-4">
+                            <legend class="des">{#CON}</legend>
+                            <div id="consumerType"></div>
+                            <div class="row mb-3">
+                                <div class="col-12 col-sm-3 my-2">{#CON_ENABLED}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="con_enabled"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#CON_LOG_OVER_WEBSERIAL}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="con_log_over_webserial"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#CON_LOG_OVER_MQTT}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="con_log_over_mqtt"/></div>
+                                <div class="col-12 col-sm-3 my-2">{#CON_DEBUG}</div>
+                                <div class="col-12 col-sm-9"><input type="checkbox" name="con_debug"/></div>
+                            </div>
+                            <div id="consumers"></div>
+                        </fieldset>
+                    </div>
+                    <!--ENDIF_PLUGIN_CONSUMER-->
 
                     <div class="row mb-4 mt-4">
                         <div class="col-8 col-sm-3">{#BTN_REBOOT_SUCCESSFUL_SAVE}</div>
@@ -1384,7 +1405,6 @@
             }
 
             /*IF_PLUGIN_ZEROEXPORT*/
-
             function apiCbBattOnOff(obj) {
                 var e = document.getElementById("battSwitch");
                 if(obj["success"]) {
@@ -1811,20 +1831,15 @@
             /*ENDIF_PLUGIN_ZEROEXPORT*/
 
             function parseZeroExport(obj, type) {
-
                 /*IF_PLUGIN_ZEROEXPORT*/
-
-                // enabled
-                document.getElementsByName("ze_enabled")[0].checked = obj["enabled"];
-
-                // log_over_webserial
-                document.getElementsByName("ze_log_over_webserial")[0].checked = obj["log_over_webserial"];
-
-                // log_over_mqtt
-                document.getElementsByName("ze_log_over_mqtt")[0].checked = obj["log_over_mqtt"];
-
-                // debug
-                document.getElementsByName("ze_debug")[0].checked = obj["debug"];
+                    // Create Checkbox ze_enabled
+                    document.getElementsByName("ze_enabled")[0].checked = obj["enabled"];
+                    // Create Checkbox ze_log_over_webserial
+                    document.getElementsByName("ze_log_over_webserial")[0].checked = obj["log_over_webserial"];
+                    // Create Checkbox ze_log_over_mqtt
+                    document.getElementsByName("ze_log_over_mqtt")[0].checked = obj["log_over_mqtt"];
+                    // Create Checkbox ze_debug
+                    document.getElementsByName("ze_debug")[0].checked = obj["debug"];
 
                 // groups
                 maxGroups = obj["max_groups"];
@@ -1891,21 +1906,171 @@
                 /*ENDIF_PLUGIN_ZEROEXPORT*/
             }
 
+            /*IF_PLUGIN_POWERMETER*/
+            function Powermeter_Modal(obj, pmObj) {
+                // Create CheckBox enabled for Tab General
+                var cbEnabled = ml("input", {name: "enabled", type: "checkbox"}, null);
+                cbEnabled.checked = (obj.enabled);
+                // Create Powermeter Modal
+                var html = ml("div", {}, [
+                    // Create Tabs
+                    tabs(["{#PM_POWERMETER_MODAL_TAB_GENERAL}", "{#PM_POWERMETER_MODAL_TAB_PROPERTIES}", "{#PM_POWERMETER_MODAL_TAB_OUTPUT}", "{#PM_POWERMETER_MODAL_TAB_ADVANCED}"]),
+                    // Create Tab General
+                    ml("div", {id: "div{#PM_POWERMETER_MODAL_TAB_GENERAL}", class: "tab-content"}, [
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_ID}", String(obj.id)),
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_NAME}", ml("input", {name: "name", class: "text", type: "text", value: obj.name}, null)),
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_ENABLE}", cbEnabled),
+                    ]),
+                    // Create Tab Properties
+                    ml("div", {id: "div{#PM_POWERMETER_MODAL_TAB_PROPERTIES}", class: "tab-content"}, [
+                    ]),
+                    // Create Tab Output
+                    ml("div", {id: "div{#PM_POWERMETER_MODAL_TAB_OUTPUT}", class: "tab-content"}, [
+                    ]),
+                    // Create Tab Advanced
+                    ml("div", {id: "div{#PM_POWERMETER_MODAL_TAB_ADVANCED}", class: "tab-content"}, [
+                    ]),
+                    // Global
+                    ml("div", {class: "row mt-5"}, [
+                        ml("div", {class: "col-4 a-l"}, ml("input", {type: "button", value: "{#BTN_DEL}", class: "btn", onclick: function() { del(); }}, null)),
+                        ml("div", {class: "col-4", id: "res"}, ""),
+                        ml("div", {class: "col-4 a-r"}, ml("input", {type: "button", value: "{#BTN_SAVE}", class: "btn", onclick: function() { save(); }}, null)),
+                    ])
+                ]);
+                modal("{#ZE_GROUP_EDIT_MODAL}: " + obj.id, html);
+
+                // Create function del
+                function del() {
+
+                }
+
+                // Create function save
+                function save() {
+                    var o = new Object();
+                    o.cmd  = "save_powermeter_cfg"
+//                //                    o.token = "*"
+                    // Prepare Data from Tab General
+                    o.id = obj.id
+                    o.name = document.getElementsByName("name")[0].value;
+                    o.enabled  = document.getElementsByName("enabled")[0].checked;
+//                    // Powermeter
+//                    o.pm_refresh = document.getElementsByName("pm_refresh")[0].value;
+//                    var e = document.getElementsByName("pm_type")[0];
+//                    o.pm_type = e.options[e.selectedIndex].value;
+//                    o.pm_src = document.getElementsByName("pm_src")[0].value;
+//                    o.pm_jsonPath = document.getElementsByName("pm_jsonPath")[0].value;
+//                    o.pm_user = document.getElementsByName("pm_user")[0].value;
+//                    o.pm_pass = document.getElementsByName("pm_pass")[0].value;
+//                    var e = document.getElementsByName("pm_target")[0];
+//                    o.pm_target = e.options[e.selectedIndex].value;
+//                    // Inverters
+//                    o.invMax = document.getElementById("invMax").value;
+//                    o.inverters = [];
+//                    for(var inv = 0; inv < o.invMax; inv++) {
+//                        var q = new Object();
+//                        q.enabled = document.getElementById("invEnabled"+inv).checked;
+//                        var e = document.getElementById("invId"+inv);
+//                        q.id = e.options[e.selectedIndex].value;
+//                        q.powerMin = document.getElementById("invPowerMin"+inv).value;
+//                        q.powerMax = document.getElementById("invPowerMax"+inv).value;
+//                        q.turnOff = document.getElementById("invTurnOff"+inv).checked;
+//                        o.inverters.push(q);
+//                    }
+//                    // Battery
+//                    var e = document.getElementsByName("battCfg")[0];
+//                    o.battCfg = e.options[e.selectedIndex].value;
+//                    o.battTopic = document.getElementsByName("battTopic")[0].value;
+//                    o.battLimitOn = document.getElementsByName("battLimitOn")[0].value;
+//                    o.battLimitOff = document.getElementsByName("battLimitOff")[0].value;
+//                    //o.battSwitch = document.getElementsByName("battSwitch")[0].value;
+//                    // Advanced
+//                    o.setPoint = document.getElementsByName("setPoint")[0].value;
+//                    o.minimum = document.getElementsByName("minimum")[0].checked;
+//                    o.powerTolerance = document.getElementsByName("powerTolerance")[0].value;
+//                    o.powerMax = document.getElementsByName("powerMax")[0].value;
+//                    o.Kp = document.getElementsByName("Kp")[0].value;
+//                    o.Ki = document.getElementsByName("Ki")[0].value;
+//                    o.Kd = document.getElementsByName("Kd")[0].value;
+                    // save
+                    getAjax("/api/setup", cb, "POST", JSON.stringify(o));
+                }
+
+                function cb(obj2) {
+                    var e = document.getElementById("res");
+                    if(!obj2.success)
+                        e.innerHTML = "{#ERROR}" + obj2.error;
+                    else {
+                        modalClose();
+                        getAjax("/api/setup", parse);
+                    }
+                }
+
+            }
+            /*ENDIF_PLUGIN_POWERMETER*/
+
             function parsePowermeter(obj, type) {
-
                 /*IF_PLUGIN_POWERMETER*/
-
-                    // enabled
+                    // Create Checkbox pm_enabled
                     document.getElementsByName("pm_enabled")[0].checked = obj["enabled"];
-
-                    // log_over_webserial
+                    // Create Checkbox pm_log_over_webserial
                     document.getElementsByName("pm_log_over_webserial")[0].checked = obj["log_over_webserial"];
-
-                    // log_over_mqtt
+                    // Create Checkbox pm_log_over_mqtt
                     document.getElementsByName("pm_log_over_mqtt")[0].checked = obj["log_over_mqtt"];
-
-                    // debug
+                    // Create Checkbox pm_debug
                     document.getElementsByName("pm_debug")[0].checked = obj["debug"];
+                    // Create Table powermeters
+//                    maxPowermeters = obj["max_powermeters"];
+                    var lines = [];
+                    // Create Table powermeters Head
+                    lines.push(ml("tr", {}, [
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#PM_POWERMETER_ID}"),
+                        ml("th", {style: "text-align: center;"}, "{#PM_POWERMETER_NAME}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#PM_POWERMETER_ENABLED}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#PM_POWERMETER_POWER}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#PM_POWERMETER_EDIT}")
+                    ]));
+                    // Create Table powermeters Items
+//                    for(let item = 0; item < obj.cfg.length; item++) {
+//                        lines.push(ml("tr", {}, [
+//                            ml("td", {style: "text-align: center;", }, String(obj.cfg[item].id)),
+//                            ml("td", {style: "text-align: left;", }, String(obj.cfg[item].name)),
+//                            ml("td", {style: "text-align: left;", }, badge(obj.cfg[item].enabled, (obj.cfg[item].enabled) ? "{#ENABLED}" : "{#DISABLED}")),
+
+//        ml("td", {style: "text-align: right;", id: "groupPower"+group}, String(obj.groups[group].power)),
+//        ml("td", {style: "text-align: center;", onclick: function() {
+//            function zeroGetIvList(ivObj) {
+//                ZeroExportGroup_Modal(obj.groups[group], ivObj)
+//            }
+//            getAjax("/api/inverter/list", zeroGetIvList)
+//        }}, svg(iconGear, 25, 25, "icon icon-fg pointer")),
+//        ml("td", {style: "text-align: center;", onclick: function() {ZeroExportGroup_Del(obj.groups[group]);}}, svg(iconDel, 25, 25, "icon icon-fg pointer"))
+
+//                        ]));
+//                    }
+
+//// TODO: Das Add sollte anders / ueberhaupt geloest werden
+                    var add = new Object();
+                    add.enabled = true;
+//add.id = obj.groups.length;
+//add.name = "";
+////                add.ch_max_pwr = [400,400,400,400,400,400];
+////                add.ch_name = [];
+////                add.ch_yield_cor = [];
+////                add.freq = 12;
+////                add.pa = 30;
+
+                    var e = document.getElementById("powermeters");
+                    e.innerHTML = ""; // remove all childs
+                    e.append(ml("table", {class: "table"}, ml("tbody", {}, lines)));
+// TODO: Uebersetzen mit lang.json und auf die entsprechende Dokuseite verlinken
+//e.append(
+//    divRow("Hinweis: ",
+//        ml("a", {href: "https://docs.ahoydtu.de/de/latest/zeroExport.html"}, "Bitte beachten Sie die Ausf&uuml;llhinweise in der Dokumentation."),
+//    ),
+//);
+//if(maxGroups > obj.groups.length) {
+                    e.append(ml("div", {class: "row my-3"}, ml("div", {class: "col a-r"}, ml("input", {type: "button", value: "{#BTN_ADD}", class: "btn", onclick: function() { Powermeter_Modal(add); }}, null))));
+//}
 
                 /*ELSE*/
                     var e = document.getElementById("powermeter_button");
@@ -1913,6 +2078,184 @@
                         e.disabled = true;
                         element.classList.add("disabled");
                 /*ENDIF_PLUGIN_POWERMETER*/
+            }
+
+            /*IF_PLUGIN_CONSUMER*/
+            function Consumer_Modal(obj, conObj) {
+                // Create CheckBox enabled for Tab General
+                var cbEnabled = ml("input", {name: "enabled", type: "checkbox"}, null);
+                cbEnabled.checked = (obj.enabled);
+                // Create Consumer Modal
+                var html = ml("div", {}, [
+                    // Create Tabs
+                    tabs(["{#CON_CONSUMER_MODAL_TAB_GENERAL}", "{#CON_CONSUMER_MODAL_TAB_OUTPUT}", "{#CON_CONSUMER_MODAL_TAB_INPUT}", "{#CON_CONSUMER_MODAL_TAB_PROPERTIES}", "{#CON_CONSUMER_MODAL_TAB_ADVAMCED}"]),
+                    // Create Tab General
+                    ml("div", {id: "div{#CON_CONSUMER_MODAL_TAB_GENERAL}", class: "tab-content"}, [
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_ID}", String(obj.id)),
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_NAME}", ml("input", {name: "name", class: "text", type: "text", value: obj.name}, null)),
+                        divRow("{#PM_POWERMETER_MODAL_TAB_GENERAL_ENABLE}", cbEnabled),
+                    ]),
+                    // Create Tab Output
+                    ml("div", {id: "div{#CON_CONSUMER_MODAL_TAB_OUTPUT}", class: "tab-content"}, [
+                    ]),
+                    // Create Tab Input
+                    ml("div", {id: "div{#CON_CONSUMER_MODAL_TAB_INPUT}", class: "tab-content"}, [
+                    ]),
+                    // Create Tab Properties
+                    ml("div", {id: "div{#CON_CONSUMER_MODAL_TAB_PROPERTIES}", class: "tab-content"}, [
+                    ]),
+                    // Create Tab Advanced
+                    ml("div", {id: "div{#CON_CONSUMER_MODAL_TAB_ADVAMCED}", class: "tab-content"}, [
+                    ]),
+                    // Global
+                    ml("div", {class: "row mt-5"}, [
+                        ml("div", {class: "col-4 a-l"}, ml("input", {type: "button", value: "{#BTN_DEL}", class: "btn", onclick: function() { del(); }}, null)),
+                        ml("div", {class: "col-4", id: "res"}, ""),
+                        ml("div", {class: "col-4 a-r"}, ml("input", {type: "button", value: "{#BTN_SAVE}", class: "btn", onclick: function() { save(); }}, null)),
+                    ])
+                ]);
+                modal("{#ZE_GROUP_EDIT_MODAL}: " + obj.id, html);
+
+                // Create function del
+                function del() {
+
+                }
+
+                // Create function save
+                function save() {
+                    var o = new Object();
+                    o.cmd  = "save_consumer_cfg"
+//                    //                    o.token = "*"
+                    // Prepare Data from Tab General
+                    o.id = obj.id
+                    o.name = document.getElementsByName("name")[0].value;
+                    o.enabled  = document.getElementsByName("enabled")[0].checked;
+//                    // Powermeter
+//                    o.pm_refresh = document.getElementsByName("pm_refresh")[0].value;
+//                    var e = document.getElementsByName("pm_type")[0];
+//		            o.pm_type = e.options[e.selectedIndex].value;
+//                    o.pm_src = document.getElementsByName("pm_src")[0].value;
+//                    o.pm_jsonPath = document.getElementsByName("pm_jsonPath")[0].value;
+//                    o.pm_user = document.getElementsByName("pm_user")[0].value;
+//                    o.pm_pass = document.getElementsByName("pm_pass")[0].value;
+//                    var e = document.getElementsByName("pm_target")[0];
+//		            o.pm_target = e.options[e.selectedIndex].value;
+//                    // Inverters
+//                    o.invMax = document.getElementById("invMax").value;
+//                    o.inverters = [];
+//                    for(var inv = 0; inv < o.invMax; inv++) {
+//                        var q = new Object();
+//                        q.enabled = document.getElementById("invEnabled"+inv).checked;
+//                        var e = document.getElementById("invId"+inv);
+//		                q.id = e.options[e.selectedIndex].value;
+//                        q.powerMin = document.getElementById("invPowerMin"+inv).value;
+//                        q.powerMax = document.getElementById("invPowerMax"+inv).value;
+//                        q.turnOff = document.getElementById("invTurnOff"+inv).checked;
+//                        o.inverters.push(q);
+//                    }
+//                    // Battery
+//                    var e = document.getElementsByName("battCfg")[0];
+//		            o.battCfg = e.options[e.selectedIndex].value;
+//                    o.battTopic = document.getElementsByName("battTopic")[0].value;
+//                    o.battLimitOn = document.getElementsByName("battLimitOn")[0].value;
+//                    o.battLimitOff = document.getElementsByName("battLimitOff")[0].value;
+//                    //o.battSwitch = document.getElementsByName("battSwitch")[0].value;
+//                    // Advanced
+//                    o.setPoint = document.getElementsByName("setPoint")[0].value;
+//                    o.minimum = document.getElementsByName("minimum")[0].checked;
+//                    o.powerTolerance = document.getElementsByName("powerTolerance")[0].value;
+//                    o.powerMax = document.getElementsByName("powerMax")[0].value;
+//                    o.Kp = document.getElementsByName("Kp")[0].value;
+//                    o.Ki = document.getElementsByName("Ki")[0].value;
+//                    o.Kd = document.getElementsByName("Kd")[0].value;
+                    // save
+                    getAjax("/api/setup", cb, "POST", JSON.stringify(o));
+                }
+
+                function cb(obj2) {
+                    var e = document.getElementById("res");
+                    if(!obj2.success)
+                        e.innerHTML = "{#ERROR}" + obj2.error;
+                    else {
+                        modalClose();
+                        getAjax("/api/setup", parse);
+                    }
+                }
+
+            }
+            /*ENDIF_PLUGIN_CONSUMER*/
+
+            function parseConsumer(obj, type) {
+                /*IF_PLUGIN_CONSUMER*/
+                    // Create Checkbox con_enabled
+                    document.getElementsByName("con_enabled")[0].checked = obj["enabled"];
+                    // Create Checkbox con_log_over_webserial
+                    document.getElementsByName("con_log_over_webserial")[0].checked = obj["log_over_webserial"];
+                    // Create Checkbox con_log_over_mqtt
+                    document.getElementsByName("con_log_over_mqtt")[0].checked = obj["log_over_mqtt"];
+                    // Create Checkbox con_debug
+                    document.getElementsByName("con_debug")[0].checked = obj["debug"];
+                    // Create Table consumers
+//                    maxConsumers = obj["max_consumers"];
+                    var lines = [];
+                    // Create Table consumers Head
+                    lines.push(ml("tr", {}, [
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#CON_CONSUMER_ID}"),
+                        ml("th", {style: "text-align: center;"}, "{#CON_CONSUMER_NAME}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#CON_CONSUMER_ENABLED}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#CON_CONSUMER_POWER}"),
+                        ml("th", {style: "width: 10%; text-align: center;"}, "{#CON_CONSUMER_EDIT}")
+                    ]));
+                    // Create Table consumers Items
+//                    for(let item = 0; item < obj.consumers.length; item++) {
+//                        lines.push(ml("tr", {}, [
+//                            ml("td", {style: "text-align: center;", }, String(obj.consumers[item].id)),
+//                            ml("td", {style: "text-align: left;", }, String(obj.consumers[item].name)),
+//                            ml("td", {style: "text-align: left;", }, badge(obj.consumers[item].enabled, (obj.consumers[item].enabled) ? "{#ENABLED}" : "{#DISABLED}")),
+
+//        ml("td", {style: "text-align: right;", id: "groupPower"+group}, String(obj.groups[group].power)),
+//        ml("td", {style: "text-align: center;", onclick: function() {
+//            function zeroGetIvList(ivObj) {
+//                ZeroExportGroup_Modal(obj.groups[group], ivObj)
+//            }
+//            getAjax("/api/inverter/list", zeroGetIvList)
+//        }}, svg(iconGear, 25, 25, "icon icon-fg pointer")),
+//        ml("td", {style: "text-align: center;", onclick: function() {ZeroExportGroup_Del(obj.groups[group]);}}, svg(iconDel, 25, 25, "icon icon-fg pointer"))
+
+//                      ]));
+//                    }
+
+//// TODO: Das Add sollte anders / ueberhaupt geloest werden
+                    var add = new Object();
+                    add.enabled = true;
+//add.id = obj.groups.length;
+//add.name = "";
+////                add.ch_max_pwr = [400,400,400,400,400,400];
+////                add.ch_name = [];
+////                add.ch_yield_cor = [];
+////                add.freq = 12;
+////                add.pa = 30;
+
+                    var e = document.getElementById("consumers");
+                    e.innerHTML = ""; // remove all childs
+                    e.append(ml("table", {class: "table"}, ml("tbody", {}, lines)));
+// TODO: Uebersetzen mit lang.json und auf die entsprechende Dokuseite verlinken
+//e.append(
+//    divRow("Hinweis: ",
+//        ml("a", {href: "https://docs.ahoydtu.de/de/latest/zeroExport.html"}, "Bitte beachten Sie die Ausf&uuml;llhinweise in der Dokumentation."),
+//    ),
+//);
+//if(maxGroups > obj.groups.length) {
+                    e.append(ml("div", {class: "row my-3"}, ml("div", {class: "col a-r"}, ml("input", {type: "button", value: "{#BTN_ADD}", class: "btn", onclick: function() { Consumer_Modal(add); }}, null))));
+//}
+
+                /*ELSE*/
+                    var e = document.getElementById("consumer_button");
+                        e.textContent += " (only for ESP32-S3 available)";
+                        e.disabled = true;
+                        element.classList.add("disabled");
+                /*ENDIF_PLUGIN_CONSUMER*/
+
             }
 
             function parse(root) {
@@ -1937,6 +2280,7 @@
                     /*ENDIF_PLUGIN_DISPLAY*/
                     parseZeroExport(root["zeroExport"], root["system"]["esp_type"]);
                     parsePowermeter(root["powermeter"], root["system"]["esp_type"]);
+                    parseConsumer(root["consumer"], root["system"]["esp_type"]);
 
                     getAjax("/api/inverter/list", parseIv);
                 }

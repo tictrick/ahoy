@@ -1009,6 +1009,17 @@ class RestApi {
         #endif
         // Plugin Powermeter - Ende
 
+        // Plugin Consumer
+        #if defined(PLUGIN_CONSUMER)
+        void getConsumer(JsonObject obj) {
+            obj[F("enabled")] = (bool) mConfig->plugin.consumer.enabled;
+            obj[F("log_over_webserial")] = (bool) mConfig->plugin.consumer.log_over_webserial;
+            obj[F("log_over_mqtt")] = (bool) mConfig->plugin.consumer.log_over_mqtt;
+            obj[F("debug")] = (bool) mConfig->plugin.consumer.debug;
+        }
+        #endif
+        // Plugin Consumer - Ende
+
         void getMqttInfo(JsonObject obj) {
             obj[F("enabled")]   = (mConfig->mqtt.broker[0] != '\0');
             obj[F("connected")] = mApp->getMqttIsConnected();
@@ -1088,6 +1099,12 @@ class RestApi {
             getPowermeter(obj.createNestedObject(F("powermeter")));
             #endif
             // Plugin Powermeter - Ende
+
+            // Plugin Consumer
+            #if defined(PLUGIN_CONSUMER)
+            getConsumer(obj.createNestedObject(F("consumer")));
+            #endif
+            // Plugin Consumer - Ende
         }
 
         void getNetworks(JsonObject obj) {
@@ -1381,6 +1398,42 @@ class RestApi {
             }
             #endif
             // Plugin ZeroExport - Ende
+
+            // Plugin Powermeter
+            #if defined(PLUGIN_POWERMETER)
+            else if(F("save_powermeter_cfg") == jsonIn[F("cmd")]) {
+                // General
+                uint8_t pm_powermeter_id = jsonIn[F("id")];
+                snprintf(mConfig->plugin.powermeter.cfg[pm_powermeter_id].name, POWERMETER_CFG_MAX_LEN_NAME, "%s", jsonIn[F("name")].as<const char*>());
+                mConfig->plugin.powermeter.cfg[pm_powermeter_id].enabled = jsonIn[F("enabled")];
+
+
+
+
+
+                // Global
+                mApp->saveSettings(false); // without reboot
+            }
+            #endif
+            // Plugin Powermeter - Ende
+
+            // Plugin Consumer
+            #if defined(PLUGIN_CONSUMER)
+            else if(F("save_consumer_cfg") == jsonIn[F("cmd")]) {
+                // General
+                uint8_t con_consumer_id = jsonIn[F("id")];
+                snprintf(mConfig->plugin.consumer.cfg[con_consumer_id].name, CONSUMER_CFG_MAX_LEN_NAME, "%s", jsonIn[F("name")].as<const char*>());
+                mConfig->plugin.consumer.cfg[con_consumer_id].enabled = jsonIn[F("enabled")];
+
+
+
+
+
+                // Global
+                mApp->saveSettings(false); // without reboot
+            }
+            #endif
+            // Plugin Consumer - Ende
             else {
                 jsonOut[F("error")] = F("ERR_UNKNOWN_CMD");
                 return false;
