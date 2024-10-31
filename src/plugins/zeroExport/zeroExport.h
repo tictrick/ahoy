@@ -758,8 +758,13 @@ class ZeroExport {
 
                 if (!strcmp(mCfg->groups[group].battTopic, "")) continue;
 
-                if (checkIntegerProperty(topic, mCfg->groups[group].battTopic, payload, len, &mCfg->groups[group].battValue, &_log)) return true;
-
+                if (checkIntegerProperty(topic, mCfg->groups[group].battTopic, payload, len, &mCfg->groups[group].battValue, &_log))
+                {
+                    String sPayload = String((const char*)payload).substring(0, len);
+                    DPRINTLN(DBG_INFO, String("ze: mqtt payload ") + sPayload);
+                    DPRINTLN(DBG_INFO, String("ze: mqtt battvalue ") + String(mCfg->groups[group].battValue));
+                    return true;
+                }
             }
 
         }
