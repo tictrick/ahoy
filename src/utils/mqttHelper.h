@@ -13,6 +13,43 @@
 namespace mqttHelper {
     template <typename T>
     bool checkIntegerProperty(const char *tmpTopic, const char *subTopic, const uint8_t *payload, size_t len, T *cfg, DynamicJsonHandler *log) {
+        // Überprüfe, ob das Thema übereinstimmt
+        if (strncmp(tmpTopic, subTopic, strlen(subTopic)) == 0) {
+            // Konvertiere payload in einen String und dann in Zahl
+            String sPayload = String((const char*)payload).substring(0, len);
+
+            // Variablen zum Speichern des Werts
+            T value;
+            bool conversionSuccess = false;
+
+            // Führe die Konvertierung durch abhängig vom Typ T
+            if constexpr (std::is_integral<T>::value) {
+                long tmpValue = sPayload.toInt();
+                if (tmpValue >= std::numeric_limits<T>::min() && tmpValue <= std::numeric_limits<T>::max()) {
+                    value = static_cast<T>(tmpValue);
+                    conversionSuccess = true;
+                }
+            } else if constexpr (std::is_floating_point<T>::value) {
+                float tmpValue = sPayload.toFloat();
+                if (tmpValue >= std::numeric_limits<T>::min() && tmpValue <= std::numeric_limits<T>::max()) {
+                    value = static_cast<T>(tmpValue);
+                    conversionSuccess = true;
+                }
+            }
+
+            if (conversionSuccess) {
+                *cfg = value;
+                log->addProperty("v", value);  // Runden nur, wenn T nicht Ganzzahl ist
+                return true;
+            } else {
+                log->addProperty("v", F("Fehler: Der Wert passt nicht in den Ziel-Typ T"));
+                return false;
+            }
+        }
+        return false;
+    }
+/* Alte Version
+    bool checkIntegerProperty(const char *tmpTopic, const char *subTopic, const uint8_t *payload, size_t len, T *cfg, DynamicJsonHandler *log) {
         if (strncmp(tmpTopic, subTopic, strlen(subTopic)) == 0) {
             // Konvertiere payload in einen String
             String sPayload = String((const char*)payload).substring(0, len);
@@ -20,6 +57,7 @@ namespace mqttHelper {
             // Konvertiere den String in den gewünschten Integer-Typ T
             T value;
             sscanf(sPayload.c_str(), "%d", &value);  // Beispielhaft für int, anpassen je nach T
+sscanf(sPayload.c_str(), "%f", &value);
 
             // Überprüfung, ob der Wert in den Ziel-Typ T passt
             if (sPayload.toInt() <= std::numeric_limits<T>::max() && sPayload.toInt() >= std::numeric_limits<T>::min()) {
@@ -28,8 +66,11 @@ namespace mqttHelper {
 
                 // Füge die Eigenschaft zum Log hinzu
                 log->addProperty("v", ah::round1(*cfg));
-
+// Warum hier Runden? Ist doch schon eine Ganzzahl?
                 return true;
+} else if (sPayload.toFloat() <= std::numeric_limits<T>::max() && sPayload.toFloat() >= std::numeric_limits<T>::min()) {
+    *cfg = value;
+    log->addProperty("v", ah::round1(*cfg));
             } else {
                 // Handle den Fall, wenn der Wert außerhalb des gültigen Bereichs liegt
                 log->addProperty("v", F("Fehler: Der Wert passt nicht in den Ziel-Typ T"));
@@ -38,7 +79,7 @@ namespace mqttHelper {
         }
         return false;
     }
-
+*/
     bool checkCharProperty(const char *tmpTopic, const char *subTopic, const uint8_t *payload, size_t len, char *cfg, int cfgSize, DynamicJsonHandler *log);
     bool checkBoolProperty(const char *tmpTopic, const char *subTopic, const uint8_t *payload, size_t len, bool *cfg, DynamicJsonHandler *log);
 }
