@@ -1339,18 +1339,14 @@ class RestApi {
                         mApp->subscribeExtern(mConfig->plugin.zeroExport.groups[group].pm_src, QOS_2);
                     }
                 }
-
                 snprintf(mConfig->plugin.zeroExport.groups[group].pm_jsonPath, ZEROEXPORT_GROUP_MAX_LEN_PM_JSONPATH, "%s", jsonIn[F("pm_jsonPath")].as<const char*>());
-
-
                 if (strcmp(jsonIn[F("pm_pass")], "****") != 0)
                 {
                     String auth = base64::encode(String(jsonIn[F("pm_user")]) + String(":") + String(jsonIn[F("pm_pass")]));
                     snprintf(mConfig->plugin.zeroExport.groups[group].pm_user, ZEROEXPORT_GROUP_MAX_LEN_PM_USER, "%s", String(jsonIn[F("pm_user")]).c_str());
-                    snprintf(mConfig->plugin.zeroExport.groups[group].pm_pass, ZEROEXPORT_GROUP_MAX_LEN_PM_USER, "%s", String(jsonIn[F("pm_pass")]).c_str());
+                    snprintf(mConfig->plugin.zeroExport.groups[group].pm_pass, ZEROEXPORT_GROUP_MAX_LEN_PM_PASS, "%s", String(jsonIn[F("pm_pass")]).c_str());
                     snprintf(mConfig->plugin.zeroExport.groups[group].pm_cred, ZEROEXPORT_GROUP_MAX_LEN_PM_CRED, "%s", auth.c_str());
                 }
-
                 mConfig->plugin.zeroExport.groups[group].pm_target = jsonIn[F("pm_target")];
                 // Inverters
                 for(uint8_t inv = 0; inv < ZEROEXPORT_GROUP_MAX_INVERTERS; inv++) {

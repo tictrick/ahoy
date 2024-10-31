@@ -18,6 +18,7 @@
 
 #include <list>
 
+#include "utils/dbg.h"
 #include "plugins/zeroExport/lib/sml.h"
 #include "utils/DynamicJsonHandler.h"
 
@@ -119,6 +120,10 @@ class powermeterx {
                     result = getPowermeterWattsShrdzm(group, &power);
                     break;
 #endif
+            }
+
+            if (mConfig->plugin.powermeter.debug) {
+                DPRINTLN(DBG_INFO, String("ze: ") + mLog->toString());
             }
 
             if (result) {
@@ -315,16 +320,16 @@ class powermeterx {
      */
     void setHeader(HTTPClient *h, String auth = "", u8_t realm = 0) {
         h->setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-        ///        // TODO: Ahoy-0.8.850024-zero
-        h->setUserAgent(mApp->getVersion());
-        h->setConnectTimeout(500);
-        h->setTimeout(1000);
+        // TODO: Ahoy-0.8.152-2ze
+        h->setUserAgent(String("Ahoy-") + mApp->getVersion());
+//        h->setConnectTimeout(500);
+        h->setTimeout(2000);
         h->addHeader("Content-Type", "application/json");
         h->addHeader("Accept", "application/json");
 
         if (auth != NULL && realm) {
             // h->addHeader("WWW-Authenticate", "Digest qop=\"auth\", realm=\"" + "shellypro4pm-f008d1d8b8b8" + "\\", nonce=\"60dc59c6\", algorithm=SHA-256");
-        }   else if (!auth.isEmpty()) {
+        } else if (!auth.isEmpty()) {
             h->addHeader("Authorization", "Basic " + auth);
         }
 
@@ -364,6 +369,7 @@ class powermeterx {
      *
      *
      */
+/*
     float extractJsonKey(DynamicJsonDocument data, const char* key)
     {
         if (data.containsKey(key))
@@ -373,6 +379,51 @@ class powermeterx {
             return 0.0F;
         }
     }
+*/
+bool findKeyInJson(JsonVariant variant, const char* key, float& value) {
+    // Überprüfen, ob der aktuelle Variant ein Objekt ist
+    if (variant.is<JsonObject>()) {
+        JsonObject obj = variant.as<JsonObject>();
+
+        // Durchlaufe alle Schlüssel im Objekt
+        for (JsonPair pair : obj) {
+            if (strcmp(pair.key().c_str(), key) == 0) {
+                // Wenn der Schlüssel gefunden wird, setze den Wert
+                value = (float)pair.value().as<float>();
+                return true;
+            }
+        }
+
+        // Durchlaufe alle Werte im Objekt und suche rekursiv
+        for (JsonPair pair : obj) {
+            if (findKeyInJson(pair.value(), key, value)) {
+                return true;
+            }
+        }
+    }
+    // Überprüfen, ob der aktuelle Variant ein Array ist
+    else if (variant.is<JsonArray>()) {
+        JsonArray arr = variant.as<JsonArray>();
+
+        // Durchlaufe das Array und suche rekursiv
+        for (JsonVariant item : arr) {
+            if (findKeyInJson(item, key, value)) {
+                return true;
+            }
+        }
+    }
+    return false; // Schlüssel nicht gefunden
+}
+
+float extractJsonKey(DynamicJsonDocument data, const char* key) {
+    float value = 0.0F;
+    if (findKeyInJson(data, key, value)) {
+        return value;
+    } else {
+        DPRINTLN(DBG_INFO, String("ze: mqtt powermeter deserialize no key ") + String(key));
+        return 0.0F;
+    }
+}
 
 #if defined(ZEROEXPORT_POWERMETER_SHELLY)
     /** getPowermeterWattsShelly
@@ -597,25 +648,40 @@ class powermeterx {
         mLog->addProperty("mod", "getPowermeterWattsTibber");
 
         String url = String("http://");
-        url +=  String(mCfg->groups[group].pm_user) + ":" + String(mCfg->groups[group].pm_pass) + "@";
+//        url +=  String(mCfg->groups[group].pm_user) + ":" + String(mCfg->groups[group].pm_pass) + "@";
         url +=  String(mCfg->groups[group].pm_src) +  "/" + String(mCfg->groups[group].pm_jsonPath);
 
-        setHeader(&http, mCfg->groups[group].pm_cred);
         http.begin(url);
+        setHeader(&http, String(mCfg->groups[group].pm_cred));
 
-        if (http.GET() == HTTP_CODE_OK && http.getSize() > 0) {
-            String myString = http.getString();
+        if (mCfg->debug) {
+            mLog->addProperty("url", url);
+            mLog->addProperty("cred", String(mCfg->groups[group].pm_cred));
+        }
+
+        int get = http.GET();
+        int size = http.getSize();
+        String payload = http.getString();
+
+        if (mCfg->debug) {
+            mLog->addProperty("http.Get", String(get));
+            mLog->addProperty("http.getSize", String(size));
+            mLog->addProperty("http.getString", payload);
+        }
+
+        if (get == HTTP_CODE_OK && size > 0) {
             double readVal = 0;
             unsigned char c;
 
-            for (int i = 0; i < http.getSize(); ++i) {
-                c = myString[i];
+            for (int i = 0; i < size; ++i) {
+                c = payload[i];
                 sml_states_t smlCurrentState = smlState(c);
 
                 switch (smlCurrentState) {
                     case SML_FINAL:
                         *power = _powerMeterTotal;
 // TODO: pm_taget auswerten und damit eine Regelung auf Sum, L1, L2, L3 ermöglichen (setup.html nicht vergessen)
+                        if (mCfg->debug) mLog->addProperty("power", String(*power));
                         result = true;
                         break;
                     case SML_LISTEND:
@@ -630,12 +696,6 @@ class powermeterx {
                 }
             }
         }
-        else if (http.GET() != HTTP_CODE_OK || http.getSize() <= 0)
-        {
-            DBGPRINT("http-error: ");       DBGPRINTLN(String(http.GET()));
-            DBGPRINT("http-error size: ");  DBGPRINTLN(String(http.getSize()));
-            result = false;
-        }
 
         http.end();
         return result;
@@ -644,7 +704,7 @@ class powermeterx {
 
 #if defined(ZEROEXPORT_POWERMETER_SHRDZM)
     /** getPowermeterWattsShrdzm
-     * ...
+     * Danke an Obmar für die Bereitstellung eines SHRDZM über Internet.
      * @param logObj
      * @param group
      * @returns true/false
@@ -654,25 +714,39 @@ class powermeterx {
     bool getPowermeterWattsShrdzm(uint8_t group, float *power) {
         mLog->addProperty("mod", "getPowermeterWattsShrdzm");
 
-        setHeader(&http);
-
-        String url =
-            String("http://") + String(mCfg->groups[group].pm_src) +
-            String("/") + String(mCfg->groups[group].pm_jsonPath + String("?user=") + String(mCfg->groups[group].pm_user) + String("&password=") + String(mCfg->groups[group].pm_pass));
+        String url = String("http://") + String(mCfg->groups[group].pm_src);
 
         http.begin(url);
+        setHeader(&http, String(mCfg->groups[group].pm_cred));
 
-        if (http.GET() == HTTP_CODE_OK && http.getSize() > 0) {
+        if (mCfg->debug) {
+            mLog->addProperty("url", url);
+            mLog->addProperty("cred", String(mCfg->groups[group].pm_cred));
+        }
+
+        int get = http.GET();
+        int size = http.getSize();
+        String payload = http.getString();
+
+        if (mCfg->debug) {
+            mLog->addProperty("http.Get", String(get));
+            mLog->addProperty("http.getSize", String(size));
+        }
+
+        if (get == HTTP_CODE_OK && size > 0) {
             // Parsing
-            DynamicJsonDocument doc(512);
-            DeserializationError error = deserializeJson(doc, http.getString());
+            DynamicJsonDocument doc(size + 256);
+            DeserializationError error = deserializeJson(doc, payload);
+
             if (error) {
+                if (mCfg->debug) {
+                    mLog->addProperty("http.getString", "payload: " + payload);
+                }
                 mLog->addProperty("err", "deserializeJson: " + String(error.c_str()));
                 return false;
             } else {
-                if (doc.containsKey(F("16.7.0"))) {
-                    *power = doc["16.7.0"];
-                }
+                *power = extractJsonKey(doc, mCfg->groups[group].pm_jsonPath);
+                if (mCfg->debug) mLog->addProperty("power", String(*power));
             }
         }
         http.end();

@@ -228,7 +228,7 @@ typedef struct {
 #define ZEROEXPORT_GROUP_MAX_LEN_PM_JSONPATH      100
 #define ZEROEXPORT_GROUP_MAX_LEN_PM_USER           25
 #define ZEROEXPORT_GROUP_MAX_LEN_PM_PASS           25
-#define ZEROEXPORT_GROUP_MAX_LEN_PM_CRED           25
+#define ZEROEXPORT_GROUP_MAX_LEN_PM_CRED           68
 #define ZEROEXPORT_GROUP_MAX_LEN_BATT_TOPIC       100
 #define ZEROEXPORT_GROUP_MAX_INVERTERS              3
 #define ZEROEXPORT_POWERMETER_MAX_ERRORS            5
@@ -733,6 +733,7 @@ class settings {
                 snprintf(mCfg.plugin.zeroExport.groups[group].pm_jsonPath, ZEROEXPORT_GROUP_MAX_LEN_PM_JSONPATH,  "%s", DEF_ZEXPORT);
                 snprintf(mCfg.plugin.zeroExport.groups[group].pm_user, ZEROEXPORT_GROUP_MAX_LEN_PM_USER,  "%s", DEF_ZEXPORT);
                 snprintf(mCfg.plugin.zeroExport.groups[group].pm_pass, ZEROEXPORT_GROUP_MAX_LEN_PM_PASS,  "%s", DEF_ZEXPORT);
+                snprintf(mCfg.plugin.zeroExport.groups[group].pm_cred, ZEROEXPORT_GROUP_MAX_LEN_PM_CRED,  "%s", DEF_ZEXPORT);
                 mCfg.plugin.zeroExport.groups[group].pm_target = zeroExportPowermeterTarget::Sum;
                 // Inverters
                 for(uint8_t inv = 0; inv < ZEROEXPORT_GROUP_MAX_INVERTERS; inv++) {
@@ -1113,6 +1114,7 @@ class settings {
                 obj[F("pm_jsonPath")] = mCfg.plugin.zeroExport.groups[group].pm_jsonPath;
                 obj[F("pm_user")] = mCfg.plugin.zeroExport.groups[group].pm_user;
                 obj[F("pm_pass")] = mCfg.plugin.zeroExport.groups[group].pm_pass;
+                obj[F("pm_cred")] = mCfg.plugin.zeroExport.groups[group].pm_cred;
                 obj[F("pm_target")] = mCfg.plugin.zeroExport.groups[group].pm_target;
                 // Inverters
                 JsonArray invArr = obj.createNestedArray(F("inverters"));
@@ -1151,6 +1153,8 @@ class settings {
                     getChar(obj, F("pm_user"), mCfg.plugin.zeroExport.groups[group].pm_user, ZEROEXPORT_GROUP_MAX_LEN_PM_USER);
                 if (obj.containsKey(F("pm_pass")))
                     getChar(obj, F("pm_pass"), mCfg.plugin.zeroExport.groups[group].pm_pass, ZEROEXPORT_GROUP_MAX_LEN_PM_PASS);
+                if (obj.containsKey(F("pm_cred")))
+                    getChar(obj, F("pm_cred"), mCfg.plugin.zeroExport.groups[group].pm_cred, ZEROEXPORT_GROUP_MAX_LEN_PM_CRED);
                 if (obj.containsKey(F("pm_target")))
                     getVal<uint8_t>(obj, F("pm_target"), &mCfg.plugin.zeroExport.groups[group].pm_target);
                 // Inverters
