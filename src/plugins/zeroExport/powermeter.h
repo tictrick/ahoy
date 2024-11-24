@@ -96,7 +96,7 @@ class powermeterx {
 #endif
 #if defined(ZEROEXPORT_POWERMETER_TASMOTA)
                 case zeroExportPowermeterType_t::Tasmota:
-                    result = getPowermeterWattsTasmota(*mLog, group, &power);
+                    result = getPowermeterWattsTasmota(group, &power);
                     break;
 #endif
 #if defined(ZEROEXPORT_POWERMETER_HICHI)
@@ -365,21 +365,9 @@ class powermeterx {
         */
     }
 
-    /**
-     *
+    /** findKeyInJson
      *
      */
-/*
-    float extractJsonKey(DynamicJsonDocument data, const char* key)
-    {
-        if (data.containsKey(key))
-            return (float)data[key];
-        else {
-            DPRINTLN(DBG_INFO, String("ze: mqtt powermeter deserialize no key ") + String(key));
-            return 0.0F;
-        }
-    }
-*/
 bool findKeyInJson(JsonVariant variant, const char* key, float& value) {
     // Überprüfen, ob der aktuelle Variant ein Objekt ist
     if (variant.is<JsonObject>()) {
@@ -415,6 +403,9 @@ bool findKeyInJson(JsonVariant variant, const char* key, float& value) {
     return false; // Schlüssel nicht gefunden
 }
 
+    /** extractJsonKey
+     *
+     */
 float extractJsonKey(DynamicJsonDocument data, const char* key) {
     float value = 0.0F;
     if (findKeyInJson(data, key, value)) {
@@ -511,72 +502,49 @@ float extractJsonKey(DynamicJsonDocument data, const char* key) {
 #if defined(ZEROEXPORT_POWERMETER_TASMOTA)
     /** getPowermeterWattsTasmota
      * ...
-     * @param logObj
      * @param group
+     * @param *power
      * @returns true/false
      */
-    bool getPowermeterWattsTasmota(DynamicJsonHandler logObj, uint8_t group, float *power) {
-        logObj["mod"] = "getPowermeterWattsTasmota";
-        /*
-        // TODO: nicht komplett
+    bool getPowermeterWattsTasmota(uint8_t group, float *power) {
+        mLog->addProperty("mod", "getPowermeterWattsTasmota");
 
-                    HTTPClient http;
-                    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-                    http.setUserAgent("Ahoy-Agent");
-        // TODO: Ahoy-0.8.850024-zero
-                    http.setConnectTimeout(500);
-                    http.setTimeout(500);
-        // TODO: Timeout von 1000 reduzieren?
-                    http.addHeader("Content-Type", "application/json");
-                    http.addHeader("Accept", "application/json");
+        String url = String("http://") + String(mCfg->groups[group].pm_src);
 
-        //            String url = String("http://") + String(mCfg->groups[group].pm_src) + String("/") + String(mCfg->groups[group].pm_jsonPath);
-                    String url = String(mCfg->groups[group].pm_src);
-                    logObj["HTTP_URL"] = url;
+        http.begin(url);
+        setHeader(&http, String(mCfg->groups[group].pm_cred));
 
-                    http.begin(url);
+        if (mCfg->debug) {
+            mLog->addProperty("url", url);
+            mLog->addProperty("cred", String(mCfg->groups[group].pm_cred));
+        }
 
-                    if (http.GET() == HTTP_CODE_OK)
-                    {
+        int get = http.GET();
+        String payload = http.getString();
+        int size = payload.length();
 
-                        // Parsing
-                        DynamicJsonDocument doc(2048);
-                        DeserializationError error = deserializeJson(doc, http.getString());
-                        if (error)
-                        {
-                            logObj["error"] = "deserializeJson() failed: " + String(error.c_str());
-                            return result;
-                        }
+        if (mCfg->debug) {
+            mLog->addProperty("http.Get", String(get));
+            mLog->addProperty("http.getSize", String(size));
+            mLog->addProperty("http.getString", String(payload));
+        }
 
-        // TODO: Sum
-                            result = true;
+        if (get == HTTP_CODE_OK && size > 0) {
+            // Parsing
+            DynamicJsonDocument doc(size + 256);
+            DeserializationError error = deserializeJson(doc, payload);
 
-        // TODO: L1
+            if (error) {
+                mLog->addProperty("err", "deserializeJson: " + String(error.c_str()));
+                return false;
+            } else {
+                *power = extractJsonKey(doc, mCfg->groups[group].pm_jsonPath);
+                if (mCfg->debug) mLog->addProperty("power", String(*power));
+            }
+        }
+        http.end();
 
-        // TODO: L2
-
-        // TODO: L3
-
-        /*
-                        JsonObject Tasmota_ENERGY = doc["StatusSNS"]["ENERGY"];
-                        int Tasmota_Power = Tasmota_ENERGY["Power"]; // 0
-                        return Tasmota_Power;
-        */
-        /*
-        String url = "http://" + String(TASMOTA_IP) + "/cm?cmnd=status%2010";
-        ParsedData = http.get(url).json();
-        int Watts = ParsedData[TASMOTA_JSON_STATUS][TASMOTA_JSON_PAYLOAD_MQTT_PREFIX][TASMOTA_JSON_POWER_MQTT_LABEL].toInt();
-        return Watts;
-        */
-        /*
-                        logObj["P"]   = mCfg->groups[group].pmPower;
-                        logObj["P1"] = mCfg->groups[group].pmPowerL1;
-                        logObj["P2"] = mCfg->groups[group].pmPowerL2;
-                        logObj["P3"] = mCfg->groups[group].pmPowerL3;
-                    }
-                    http.end();
-        */
-        return false;
+        return true;
     }
 #endif
 
@@ -755,7 +723,7 @@ float extractJsonKey(DynamicJsonDocument data, const char* key) {
     }
 #endif
 
-    /**
+    /** bufferWrite
      *
      */
     void bufferWrite(float raw, short group) {
