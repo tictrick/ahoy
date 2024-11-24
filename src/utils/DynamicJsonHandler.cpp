@@ -1,13 +1,11 @@
 #include "DynamicJsonHandler.h"
 
-DynamicJsonHandler::DynamicJsonHandler() : doc(min_size) {
-}
+DynamicJsonHandler::DynamicJsonHandler() : doc(min_size) {}
 
-DynamicJsonHandler::~DynamicJsonHandler() {
-    delete &doc;
-}
+DynamicJsonHandler::~DynamicJsonHandler() {}
 
 String DynamicJsonHandler::toString() {
+    if (doc.isNull()) return "{}";
     String jsonString;
     serializeJson(doc, jsonString);
     return jsonString;
@@ -22,17 +20,15 @@ size_t DynamicJsonHandler::size() const {
 }
 
 void DynamicJsonHandler::resizeDocument(size_t requiredSize) {
-    // TODO: multiplikator zwei muss ersetzt werden? Kann noch minimal werden.
-    size_t newCapacity = min(max(requiredSize * 2, min_size), max_size);
+    if (requiredSize > max_size) {
+        DBGPRINT("DynamicJsonHandler::resizeDocument: Error requiredSize ");
+        DBGPRINT(String(requiredSize));
+        DBGPRINT(" > max_size ");
+        DBGPRINTLN(String(max_size));
+        return;
+    }
+    size_t newCapacity = std::min(std::max(static_cast<size_t>(requiredSize * 1.5), min_size), max_size);
     DynamicJsonDocument newDoc(newCapacity);
     newDoc.set(doc); // Bestehende Daten kopieren
     doc = std::move(newDoc);
-}
-
-size_t DynamicJsonHandler::min(size_t a, size_t b) {
-    return (a < b) ? a : b;
-}
-
-size_t DynamicJsonHandler::max(size_t a, size_t b) {
-    return (a > b) ? a : b;
 }
