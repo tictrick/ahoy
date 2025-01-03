@@ -14,7 +14,7 @@
 #define VERSION_MAJOR       0
 #define VERSION_MINOR       8
 #define VERSION_PATCH       152
-#define VERSION_ZEROEXPORT  5
+#define VERSION_ZEROEXPORT  6
 //-------------------------------------
 typedef struct {
     uint8_t ch;
