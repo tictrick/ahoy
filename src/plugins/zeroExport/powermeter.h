@@ -88,6 +88,10 @@ class powermeterx {
             result = false;
             power = 0.0;
 
+if (! mApp->isNetworkConnected()) {
+    return;
+}
+
             switch (mCfg->groups[group].pm_type) {
 #if defined(ZEROEXPORT_POWERMETER_SHELLY)
                 case zeroExportPowermeterType_t::Shelly:
@@ -368,53 +372,91 @@ class powermeterx {
     /** findKeyInJson
      *
      */
-bool findKeyInJson(JsonVariant variant, const char* key, float& value) {
-    // Überprüfen, ob der aktuelle Variant ein Objekt ist
-    if (variant.is<JsonObject>()) {
-        JsonObject obj = variant.as<JsonObject>();
+    bool findKeyInJson(JsonVariant variant, const char* key, float& value) {
+        // Überprüfen, ob der aktuelle Variant ein Objekt ist
+        if (variant.is<JsonObject>()) {
+            JsonObject obj = variant.as<JsonObject>();
 
-        // Durchlaufe alle Schlüssel im Objekt
-        for (JsonPair pair : obj) {
-            if (strcmp(pair.key().c_str(), key) == 0) {
-                // Wenn der Schlüssel gefunden wird, setze den Wert
-                value = (float)pair.value().as<float>();
-                return true;
+            // Durchlaufe alle Schlüssel im Objekt
+            for (JsonPair pair : obj) {
+                if (strcmp(pair.key().c_str(), key) == 0) {
+                    // Wenn der Schlüssel gefunden wird, setze den Wert
+                    value = (float)pair.value().as<float>();
+                    return true;
+                }
+            }
+
+            // Durchlaufe alle Werte im Objekt und suche rekursiv
+            for (JsonPair pair : obj) {
+                if (findKeyInJson(pair.value(), key, value)) {
+                    return true;
+                }
             }
         }
+        // Überprüfen, ob der aktuelle Variant ein Array ist
+        else if (variant.is<JsonArray>()) {
+            JsonArray arr = variant.as<JsonArray>();
 
-        // Durchlaufe alle Werte im Objekt und suche rekursiv
-        for (JsonPair pair : obj) {
-            if (findKeyInJson(pair.value(), key, value)) {
-                return true;
+            // Durchlaufe das Array und suche rekursiv
+            for (JsonVariant item : arr) {
+                if (findKeyInJson(item, key, value)) {
+                    return true;
+                }
             }
         }
+        return false; // Schlüssel nicht gefunden
     }
-    // Überprüfen, ob der aktuelle Variant ein Array ist
-    else if (variant.is<JsonArray>()) {
-        JsonArray arr = variant.as<JsonArray>();
-
-        // Durchlaufe das Array und suche rekursiv
-        for (JsonVariant item : arr) {
-            if (findKeyInJson(item, key, value)) {
-                return true;
-            }
-        }
-    }
-    return false; // Schlüssel nicht gefunden
-}
 
     /** extractJsonKey
      *
      */
-float extractJsonKey(DynamicJsonDocument data, const char* key) {
-    float value = 0.0F;
-    if (findKeyInJson(data, key, value)) {
-        return value;
-    } else {
-        DPRINTLN(DBG_INFO, String("ze: mqtt powermeter deserialize no key ") + String(key));
-        return 0.0F;
+    float extractJsonKey(DynamicJsonDocument data, const char* key) {
+        float value = 0.0F;
+        if (findKeyInJson(data, key, value)) {
+            return value;
+        } else {
+            DPRINTLN(DBG_INFO, String("ze: mqtt powermeter deserialize no key ") + String(key));
+            return 0.0F;
+        }
     }
-}
+
+    /** parseJson
+     *
+     */
+    float parseJson(DynamicJsonDocument& jsonDoc, const char* jsonPath) {
+        JsonVariant value = jsonDoc.as<JsonVariant>();
+
+        // JSON-Pfad aufteilen (mit "." als Trennzeichen)
+        char pathCopy[strlen(jsonPath) + 1];
+        strcpy(pathCopy, jsonPath); // Kopie des Pfads erstellen, da strtok den Originalstring verändert
+
+        char* token = strtok(pathCopy, "."); // Pfad in Abschnitte splitten
+        while (token != nullptr) {
+            // Prüfen, ob der aktuelle Token auf ein Array hinweist (z. B. "data[0]")
+            char* arrayStart = strchr(token, '[');
+            if (arrayStart != nullptr) {
+                *arrayStart = '\0'; // Schlüssel vom Array-Index trennen
+                int index = atoi(arrayStart + 1); // Array-Index extrahieren
+
+                value = value[token]; // Zum Schlüssel navigieren
+                if (!value.is<JsonArray>() || value.isNull()) return NAN;
+
+                value = value[index]; // Zum Array-Index navigieren
+            } else {
+                value = value[token]; // Zum nächsten Schlüssel navigieren
+            }
+
+            if (value.isNull()) return NAN; // Fehler, wenn Schlüssel/Index nicht existiert
+            token = strtok(nullptr, ".");  // Nächster Abschnitt des Pfads
+        }
+
+        // Wert als Float zurückgeben, egal ob es ursprünglich ein `int` oder `float` ist
+        if (value.is<int>() || value.is<float>()) {
+            return value.as<float>();
+        }
+
+        return NAN; // Fehler, falls der Typ nicht passt
+    }
 
 #if defined(ZEROEXPORT_POWERMETER_SHELLY)
     /** getPowermeterWattsShelly
@@ -538,7 +580,8 @@ float extractJsonKey(DynamicJsonDocument data, const char* key) {
                 mLog->addProperty("err", "deserializeJson: " + String(error.c_str()));
                 return false;
             } else {
-                *power = extractJsonKey(doc, mCfg->groups[group].pm_jsonPath);
+//                *power = extractJsonKey(doc, mCfg->groups[group].pm_jsonPath);
+                *power = parseJson(doc, mCfg->groups[group].pm_jsonPath);
                 if (mCfg->debug) mLog->addProperty("power", String(*power));
             }
         }
